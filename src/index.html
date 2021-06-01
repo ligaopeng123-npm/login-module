@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Title</title>
+</head>
+<body style="margin: 0px;">
+	<login-module url="https://www.baidu.com/"
+                  user="account"
+                  password="password"
+                  id="form"
+                  style="background-image: url(/assets/background.jpg)"
+                  body-style="right: 200px;"
+                  title="系统">
+    </login-module>
+    <script>
+        const form = document.querySelector('#form');
+        form.addEventListener('submit', (data)=> {
+        	console.log(data)
+        });
+        form.addEventListener('afterSubmit', (data)=> {
+	        console.log(data)
+        });
+    </script>
+</body>
+</html>
