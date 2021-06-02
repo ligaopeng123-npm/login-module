@@ -7,7 +7,7 @@
 | 属性       | 说明                                                    | 类型   | 默认值       |
 | ---------- | ------------------------------------------------------- | ------ | ------------ |
 | title      | 项目上面的项目名称                                      | string | 某某系统     |
-| id         | 给当前dom传递的id，用于事件监听                         | string | login-module |
+| id         | 拼接本地数据存储的key值                                 | string | login-module |
 | body-style | form表单的样式                                          | string | ''           |
 | style      | 登录页样式                                              | string | ''           |
 | method     | 请求类型 GET POST                                       | string | POST         |

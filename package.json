@@ -1,8 +1,9 @@
 {
-  "name": "share-login",
-  "version": "0.0.1",
-  "description": "",
-  "private": true,
+  "name": "login-modules",
+  "version": "0.0.3",
+  "description": "登录模块",
+  "main": "src/index.ts",
+  "private": false,
   "scripts": {
     "start": "set NODE_ENV=development&&webpack serve",
     "build:dev": "set NODE_ENV=development&&webpack build",
@@ -24,6 +25,6 @@
     "webpack-dev-server": "^3.11.2"
   },
   "dependencies": {
-    "xy-ui": "^1.10.2"
+
   }
 }

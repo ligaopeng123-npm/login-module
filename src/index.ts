@@ -1,6 +1,6 @@
-import '../node_modules/xy-ui/components/xy-input.js';
-import '../node_modules/xy-ui/components/xy-checkbox.js';
-import '../node_modules/xy-ui/components/xy-form.js';
+import './xy-ui/components/xy-input.js';
+import './xy-ui/components/xy-checkbox.js';
+import './xy-ui/components/xy-form.js';
 // 静态资源依赖
 import './assets/icon.svg';
 import './assets/background.jpg';
@@ -10,7 +10,7 @@ export default class LogInModule extends HTMLElement {
 	
 	constructor() {
 		super();
-		this.shadow = this.attachShadow({mode: 'closed'});
+		this.shadow = this.attachShadow({ mode: 'closed' });
 		this.shadow.innerHTML = this.getTemplate();
 	}
 	
@@ -31,13 +31,8 @@ export default class LogInModule extends HTMLElement {
 	
 	create = () => {
 		const config = this.getConfig();
-		const {id, style, title, url, user, password} = config;
-		/**
-		 * 管理form表单id
-		 */
-		this.checkChange(`login-module`, id, () => {
-			this.form.setAttribute('id', id);
-		});
+		const { style, title, url, user, password } = config;
+		
 		/**
 		 * 项目title赋值
 		 */
@@ -100,7 +95,7 @@ export default class LogInModule extends HTMLElement {
 	};
 	__config: any = {};
 	getConfig = (): any => {
-		return Object.assign({}, this.defaultConfig, this.__config)
+		return Object.assign({}, this.defaultConfig, this.__config);
 	};
 	
 	/**
@@ -137,7 +132,7 @@ export default class LogInModule extends HTMLElement {
 			 * 如果是记住密码状态 则将密码缓存起来
 			 */
 			if (this.checkbox.checked) {
-				sessionStorage.setItem(`${this.formId}-login-user`, JSON.stringify(this.form.formdata?.json))
+				sessionStorage.setItem(`${this.formId}-login-user`, JSON.stringify(this.form.formdata?.json));
 			}
 			/**
 			 * 将消息发送出去
@@ -159,7 +154,7 @@ export default class LogInModule extends HTMLElement {
 			detail: {
 				data: data
 			}
-		}))
+		}));
 	};
 	
 	/**
@@ -171,7 +166,7 @@ export default class LogInModule extends HTMLElement {
 			this.__config[name] = newValue;
 			setTimeout(() => {
 				this.create();
-			})
+			});
 		}
 	}
 	
@@ -251,8 +246,8 @@ export default class LogInModule extends HTMLElement {
 					</xy-form-item>
 				</xy-form>
 			</div>
-		`
-	}
+		`;
+	};
 }
 if (!customElements.get('login-module')) {
 	customElements.define('login-module', LogInModule);
