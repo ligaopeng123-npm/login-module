@@ -1,10 +1,14 @@
 {
     "name": "@gaopeng123/loginModule",
-    "version": "0.2.2",
+    "version": "0.1.0",
     "description": "登录模块",
     "main": "dist/main.js",
     "typings": "dist/typing.ts",
     "private": false,
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/ligaopeng123/login-module.git"
+    },
     "scripts": {
         "start": "set NODE_ENV=development&&webpack serve",
         "build:dev": "set NODE_ENV=development&&webpack build",
