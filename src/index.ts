@@ -11,7 +11,6 @@ export default class LogInModule extends HTMLElement {
 	constructor() {
 		super();
 		this.shadow = this.attachShadow({ mode: 'closed' });
-		this.shadow.innerHTML = this.getTemplate();
 	}
 	
 	/**
@@ -29,9 +28,26 @@ export default class LogInModule extends HTMLElement {
 		return this.shadow.querySelector(`#checked`);
 	}
 	
+	get sessionId() {
+		return `${this.formId}-login-user`;
+	}
+	
+	get session() {
+		const data = sessionStorage.getItem(`${this.sessionId}`);
+		return data ? JSON.parse(data) : {};
+	}
+	
+	set session(val) {
+		sessionStorage.setItem(`${this.sessionId}`, JSON.stringify(val));
+	}
+	
+	get captchaImg() {
+		return this.shadow.querySelector(`#captchaImg`);
+	}
+	
 	create = () => {
 		const config = this.getConfig();
-		const { style, title, url, user, password } = config;
+		const { title, url, user, password, method, publickey, captcha } = config;
 		
 		/**
 		 * 项目title赋值
@@ -39,25 +55,19 @@ export default class LogInModule extends HTMLElement {
 		this.checkChange(this.shadow.querySelector('#title').innerText, title, () => {
 			this.shadow.querySelector('#title').innerText = title;
 		});
-		/**
-		 * 样式绑定
-		 */
-		if (style) {
-			this.shadow.querySelector('#login').style = style;
-		}
 		
-		/**
-		 * body的属性
-		 */
-		if (config[`body-style`]) {
-			this.form.style = config[`body-style`];
-		}
 		/**
 		 * 服务端请求
 		 */
-		if (url) {
+		this.checkChange(this.form.getAttribute('action'), url, () => {
 			this.form.setAttribute('action', url);
-		}
+		});
+		/**
+		 * 请求类型
+		 */
+		this.checkChange(this.form.getAttribute('method'), method, () => {
+			this.form.setAttribute('method', method);
+		});
 		
 		/**
 		 * 用户绑定
@@ -71,6 +81,20 @@ export default class LogInModule extends HTMLElement {
 		 */
 		this.checkChange(this.shadow.querySelector(`#password`).getAttribute('name'), password, () => {
 			this.shadow.querySelector(`#password`).setAttribute('name', password);
+		});
+		
+		/**
+		 * 密码加密绑定
+		 */
+		this.checkChange(this.shadow.querySelector(`#password`).getAttribute('publickey'), publickey, () => {
+			this.shadow.querySelector(`#password`).setAttribute('publickey', publickey);
+		});
+		
+		/**
+		 * 验证码绑定
+		 */
+		captcha && this.checkChange(this.shadow.querySelector(`#captcha`).getAttribute('name'), captcha, () => {
+			this.shadow.querySelector(`#captcha`).setAttribute('name', captcha);
 		});
 	};
 	/**
@@ -87,11 +111,15 @@ export default class LogInModule extends HTMLElement {
 		title: '某某系统',
 		id: 'login-module',
 		'body-style': '',
-		style: '',
+		'main-style': '',
 		method: 'POST', // POST GET
 		url: null, // 默认不支持传参
 		user: 'user',
-		password: 'password'
+		password: 'password',
+		captcha: '',
+		captchaurl: null,
+		captchamethod: 'POST',
+		publickey: null // 加密公钥
 	};
 	__config: any = {};
 	getConfig = (): any => {
@@ -102,8 +130,10 @@ export default class LogInModule extends HTMLElement {
 	 * 生命周期钩子函数 处理挂载
 	 */
 	connectedCallback() {
+		this.shadow.innerHTML = this.getTemplate();
 		this.addEvents();
-		this.checkbox.checked = true;
+		if (this.checkbox) this.checkbox.checked = true;
+		this.setCaptcha();
 	}
 	
 	/**
@@ -116,11 +146,31 @@ export default class LogInModule extends HTMLElement {
 	removeEvents() {
 		this.form.removeEventListener('submit', this.watchSubmit);
 		this.shadow.querySelector(`#bth-login`).removeEventListener('click', this.onSubmit);
+		if (this.getConfig().captcha) {
+			this.captchaImg?.removeEventListener('click', this.setCaptcha);
+		}
 	}
 	
 	addEvents() {
 		this.form.addEventListener('submit', this.watchSubmit);
 		this.shadow.querySelector(`#bth-login`).addEventListener('click', this.onSubmit);
+		this.addCaptchaEvent();
+	}
+	
+	addCaptchaEvent() {
+		if (this.getConfig().captcha) {
+			this.captchaImg?.addEventListener('click', this.setCaptcha);
+		}
+	}
+	
+	/**
+	 * 对外传递消息数据结构
+	 * @param data
+	 */
+	getDetail(data: any) {
+		return Object.assign({}, data, {
+			session: this.session
+		});
 	}
 	
 	/**
@@ -131,16 +181,18 @@ export default class LogInModule extends HTMLElement {
 			/**
 			 * 如果是记住密码状态 则将密码缓存起来
 			 */
-			if (this.checkbox.checked) {
-				sessionStorage.setItem(`${this.formId}-login-user`, JSON.stringify(this.form.formdata?.json));
+			if (this.checkbox && this.checkbox.checked) {
+				this.session = Object.assign({
+					keepLogged: this.checkbox.checked
+				}, this.form.formdata?.json);
+			} else {
+				this.session = Object.assign({}, this.form.formdata?.json);
 			}
 			/**
 			 * 将消息发送出去
 			 */
 			this.dispatchEvent(new CustomEvent('submit', {
-				detail: {
-					data: this.form.formdata?.json
-				}
+				detail: this.getDetail({ data: this.form.formdata?.json })
 			}));
 		}
 	};
@@ -149,11 +201,10 @@ export default class LogInModule extends HTMLElement {
 	 * 监听提交事件
 	 * @param data
 	 */
-	watchSubmit = (data: any) => {
+	watchSubmit = (res: any) => {
+		const { data, token } = res?.detail;
 		this.dispatchEvent(new CustomEvent('afterSubmit', {
-			detail: {
-				data: data
-			}
+			detail: this.getDetail({ data: this.form.formdata?.json, token, response: data })
 		}));
 	};
 	
@@ -175,13 +226,51 @@ export default class LogInModule extends HTMLElement {
 	 * @returns {string[]}
 	 */
 	static get observedAttributes() {
-		return ['title', 'id', 'body-style', 'style', 'url', 'user', 'password'];
+		return ['title',
+			'id',
+			'body-style',
+			'main-style',
+			'url',
+			'method',
+			'user',
+			'password',
+			'captcha',
+			'captchaurl',
+			'captchamethod',
+			'publickey'];
 	}
+	
+	/**
+	 * 获取验证码
+	 */
+	getCaptcha = async (): Promise<Blob> => {
+		const { captchaurl, captchamethod } = this.getConfig();
+		const data = await fetch(captchaurl, {
+			method: captchamethod,
+			mode: 'cors',
+			headers: {
+				'content-type': 'application/x-www-form-urlencoded;charset=utf-8'
+			}
+		});
+		return await data.blob();
+	};
+	
+	/**
+	 * 设置验证码
+	 */
+	setCaptcha = async () => {
+		if (this.getConfig().captcha) {
+			const captcha = await this.getCaptcha();
+			this.captchaImg.setAttribute('src', window.URL?.createObjectURL(captcha));
+		}
+	};
 	
 	/**
 	 * 模板获取
 	 */
 	getTemplate = () => {
+		const config = this.getConfig();
+		const { title, url, user, password, method, publickey, captcha } = config;
 		return `
 			<style>
 				xy-form {
@@ -206,6 +295,10 @@ export default class LogInModule extends HTMLElement {
 				    justify-content: center;
 				    align-items: center;
 				    background-image: url("assets/background.jpg");
+				    background-repeat:no-repeat;
+                    background-attachment:fixed;
+                    background-position:center;
+                    background-size: cover;
 				}
 				.login-title {
 					color: #333;
@@ -224,31 +317,38 @@ export default class LogInModule extends HTMLElement {
 				}
 
 			</style>
-			<div class="login-module" id="login">
-				<xy-form id="login-module" method="${this.getConfig().method}">
+			<div class="login-module" id="login" style="${config[`main-style`]}">
+				<xy-form id="login-module" action="${url}" method="${method}" style="${config['body-style']}">
 					<xy-form-item class="login-title">
-						<span id="title"></span>
+						<span id="title">${title}</span>
 					</xy-form-item>
 					<xy-form-item>
-						<xy-input id="user" icon="user" color="#999" required name="user" placeholder="请输入用户名"></xy-input>
+						<xy-input id="user" icon="user" color="#999" required name="${user}" placeholder="请输入用户名"></xy-input>
 					</xy-form-item>
 					<xy-form-item>
-						<xy-input id="password" icon="lock" name="password" required type="password" placeholder="请输入密码"></xy-input>
+						<xy-input id="password" icon="lock" publickey="${publickey}" name="${password}" required type="password" placeholder="请输入密码"></xy-input>
 					</xy-form-item>
-					<xy-form-item >
-						<div class="login-manipulate">
-							<xy-checkbox id="checked">记住密码</xy-checkbox>
-							<a style="float: right;" href="javascript:void(0);">忘记密码</a>
-						</div>
-					</xy-form-item>
-					<xy-form-item>
-						<xy-button id="bth-login" type="primary" htmltype="submit">登录</xy-button>
-					</xy-form-item>
-				</xy-form>
-			</div>
-		`;
+		` + (captcha ? `
+                    <xy-form-item id="captchaItem">
+                        <xy-input style="width: 70%;" id="captcha" icon="message" name="${captcha}" required type="captcha" placeholder="请输入验证码"></xy-input>
+                        <img id="captchaImg" width="24" height="24" style="width: 80px;height: 37px;float: right;border-radius: 4px;" />
+                    </xy-form-item>
+            ` : '') + `
+		            <!--<xy-form-item >-->
+						<!--<div class="login-manipulate">-->
+							<!--<xy-checkbox id="checked">记住密码</xy-checkbox>-->
+							<!--<a style="float: right;" href="javascript:void(0);">忘记密码</a>-->
+						<!--</div>-->
+					<!--</xy-form-item>-->
+                    <xy-form-item>
+                        <xy-button id="bth-login" type="primary" htmltype="submit">登录</xy-button>
+                    </xy-form-item>
+                </xy-form>
+            </div>`
+			;
 	};
 }
+
 if (!customElements.get('login-module')) {
 	customElements.define('login-module', LogInModule);
 }

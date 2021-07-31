@@ -1,10 +1,14 @@
+import XyMessage from './xy-message.js';
+
 export default class XyForm extends HTMLElement {
-
-    static get observedAttributes() { return ['disabled'] }
-
+    
+    static get observedAttributes() {
+        return ['disabled']
+    }
+    
     constructor() {
         super();
-        const shadowRoot = this.attachShadow({ mode: 'open' });
+        const shadowRoot = this.attachShadow({mode: 'open'});
         shadowRoot.innerHTML = `
         <style>
         :host {
@@ -29,113 +33,131 @@ export default class XyForm extends HTMLElement {
             grid-column:span 2;
         }
         </style>
-        <form id="form" method="${this.method}" action="${this.action}" ${this.novalidate?'novalidate':''}>
+        <form id="form" method="${this.method}" action="${this.action}" ${this.novalidate ? 'novalidate' : ''}>
             <slot></slot>
         </form>
         `
     }
-
+    
     checkValidity() {
-        if(this.novalidate){
+        if (this.novalidate) {
             return true;
         }
         const elements = [...this.elements].reverse();
         let validity = true;
-        elements.forEach(el=>{
-            if(el.checkValidity&&!el.checkValidity()){
+        elements.forEach(el => {
+            if (el.checkValidity && !el.checkValidity()) {
                 validity = false;
             }
-        })
+        });
         this.invalid = !validity;
         return validity;
     }
-
+    
+    checkStatus = (response) => response.status >= 200 && response.status < 300;
+    
+    afterSubmit = async (data) => {
+        // if(data.headers.get("content-type")=='application/json'){
+        // 无论对错 结果都要抛出来
+        // }
+        this.submitBtn && (this.submitBtn.loading = false);
+        /**
+         * 请求返回数据
+         * @type {any}
+         */
+        let resData = data;
+        
+        if (this.checkStatus(resData)) {
+            resData = await data.json();
+        } else {
+            XyMessage.error(`登录失败，请检查网络设置！`)
+        }
+        this.dispatchEvent(new CustomEvent('submit', {
+            detail: {
+                data: resData,
+                token: data?.headers?.get('token')
+            }
+        }));
+    };
+    
     async submit() {
-        if(this.checkValidity()&&!this.disabled){
+        if (this.checkValidity() && !this.disabled) {
             //validity
-            if(this.action){
+            if (this.action) {
                 this.submitBtn && (this.submitBtn.loading = true);
-                if(this.method=='GET'){
+                if (this.method == 'GET') {
                     const formdata = new URLSearchParams(this.formdata).toString();
                     const data = await fetch(`${this.action}?${formdata}`);
-                    this.submitBtn && (this.submitBtn.loading = false);
-                    if(data.headers.get("content-type")=='application/json'){
-                        this.dispatchEvent(new CustomEvent('submit',{
-                            detail:{
-                                data:data.json()
-                            }
-                        }));
-                    }
-                }else{
+                    this.afterSubmit(data);
+                } else {
                     const data = await fetch(this.action, {
                         method: 'POST',
-                        body: this.formdata,
-                    })
-                    this.submitBtn && (this.submitBtn.loading = false);
-                    if(data.headers.get("content-type")=='application/json'){
-                        this.dispatchEvent(new CustomEvent('submit',{
-                            detail:{
-                                data:data.json()
-                            }
-                        }));
-                    }
+                        body: JSON.stringify(this.formdata.json),
+                        mode: 'cors',
+                        headers: {
+                            'content-type': 'application/json',
+                            // 'Access-Control-Expose-Headers': 'token',
+                            // 'Access-Control-Allow-Headers': 'token'
+                        },
+                    });
+                    this.afterSubmit(data);
                 }
             }
         }
     }
-
+    
     reset() {
         this.invalid = false;
-        this.elements.forEach(el=>{
+        this.elements.forEach(el => {
             el.reset && el.reset();
         })
     }
-
+    
     get validity() {
-        return this.elements.every(el=>el.validity);
+        return this.elements.every(el => el.validity);
     }
-
+    
     get disabled() {
-        return this.getAttribute('disabled')!==null;
+        return this.getAttribute('disabled') !== null;
     }
-
+    
     get novalidate() {
-        return this.getAttribute('novalidate')!==null;
+        return this.getAttribute('novalidate') !== null;
     }
-
+    
     get formdata() {
         const formdata = new FormData();
         const jsondata = {};
-        if(!this.disabled){
-            this.elements.forEach(el=>{
-                formdata.set(el.name,el.value);
+        if (!this.disabled) {
+            this.elements.forEach(el => {
+                formdata.set(el.name, el.value);
                 jsondata[el.name] = el.value;
             })
         }
         formdata.json = jsondata;
         return formdata;
     }
-
+    
     get method() {
-        const method = (this.getAttribute('method')||'get').toUpperCase();
-        if( ['GET','POST'].includes(method) ){
+        const method = (this.getAttribute('method') || 'get').toUpperCase();
+        if (['GET', 'POST'].includes(method)) {
             return method;
         }
         return 'GET';
     }
-
+    
     get action() {
-        return this.getAttribute('action')||'';
+        return this.getAttribute('action') || '';
     }
-
+    
     get name() {
         return this.getAttribute('name');
     }
-
+    
     get invalid() {
-        return this.getAttribute('invalid')!==null;
+        return this.getAttribute('invalid') !== null;
     }
-
+    
     /*
     get enctype() {
         const enctype = this.getAttribute('enctype');
@@ -145,44 +167,44 @@ export default class XyForm extends HTMLElement {
         return 'application/x-www-form-urlencoded';
     }
     */
-
+    
     set novalidate(value) {
-        if(value===null||value===false){
+        if (value === null || value === false) {
             this.removeAttribute('novalidate');
-        }else{
+        } else {
             this.setAttribute('novalidate', '');
         }
     }
-
+    
     set invalid(value) {
-        if(value===null||value===false){
+        if (value === null || value === false) {
             this.removeAttribute('invalid');
-        }else{
+        } else {
             this.setAttribute('invalid', '');
         }
     }
-
+    
     set type(value) {
         this.setAttribute('type', value);
     }
-
+    
     connectedCallback() {
-        this.form  = this.shadowRoot.getElementById('form');
-        this.elements  = [...this.querySelectorAll('[name]:not([disabled])')];
+        this.form = this.shadowRoot.getElementById('form');
+        this.elements = [...this.querySelectorAll('[name]:not([disabled])')];
         this.submitBtn = this.querySelector('[htmltype=submit]');
         this.resetBtn = this.querySelector('[htmltype=reset]');
-        if(this.submitBtn){
-            this.submitBtn.addEventListener('click',()=>{
+        if (this.submitBtn) {
+            this.submitBtn.addEventListener('click', () => {
                 this.submit();
             });
         }
-        if(this.resetBtn){
-            this.resetBtn.addEventListener('click',()=>{
+        if (this.resetBtn) {
+            this.resetBtn.addEventListener('click', () => {
                 this.reset();
             });
         }
-        this.form.addEventListener('keydown',(ev)=>{
-            if(ev.target==this.resetBtn){
+        this.form.addEventListener('keydown', (ev) => {
+            if (ev.target == this.resetBtn) {
                 return
             }
             switch (ev.keyCode) {
@@ -193,14 +215,14 @@ export default class XyForm extends HTMLElement {
                     break;
             }
         })
-        if(!this.novalidate){
-            this.elements.forEach((el)=>{
-                if(el.tagName=="XY-INPUT"){
-                    el.addEventListener('input',()=>{
+        if (!this.novalidate) {
+            this.elements.forEach((el) => {
+                if (el.tagName == "XY-INPUT") {
+                    el.addEventListener('input', () => {
                         this.invalid = !this.validity;
                     })
-                }else{
-                    el.addEventListener('change',()=>{
+                } else {
+                    el.addEventListener('change', () => {
                         this.invalid = !this.validity;
                     })
                 }
@@ -209,16 +231,16 @@ export default class XyForm extends HTMLElement {
     }
 }
 
-if(!customElements.get('xy-form')){
+if (!customElements.get('xy-form')) {
     customElements.define('xy-form', XyForm);
 }
 
 
 class XyFormItem extends HTMLElement {
-
+    
     constructor() {
         super();
-        const shadowRoot = this.attachShadow({ mode: 'open' });
+        const shadowRoot = this.attachShadow({mode: 'open'});
         shadowRoot.innerHTML = `
         <style>
         :host {
@@ -239,28 +261,28 @@ class XyFormItem extends HTMLElement {
         <div class="item"><slot></slot></slot>
         `
     }
-
+    
     get legend() {
-        return this.getAttribute('legend')||'';
+        return this.getAttribute('legend') || '';
     }
-
+    
     set legend(value) {
         this.setAttribute('legend', value);
     }
-
+    
     connectedCallback() {
         this.form = this.closest('xy-form');
         this.labels = this.shadowRoot.querySelector('label');
         this.slots = this.shadowRoot.querySelector('slot');
-        this.slots.addEventListener('slotchange',()=>{
+        this.slots.addEventListener('slotchange', () => {
             this.input = this.querySelector('[name]');
-            if(this.input && this.input.required){
+            if (this.input && this.input.required) {
                 this.labels.classList.add('required');
             }
         })
     }
 }
 
-if(!customElements.get('xy-form-item')){
+if (!customElements.get('xy-form-item')) {
     customElements.define('xy-form-item', XyFormItem);
 }

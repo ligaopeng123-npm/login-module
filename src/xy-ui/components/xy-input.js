@@ -1,16 +1,20 @@
 import './xy-tips.js';
 import './xy-button.js';
+import { encryptDES } from '../utils/crypto.js';
+
 
 export default class XyInput extends HTMLElement {
-
-    static get observedAttributes() { return ['label','disabled','pattern','required','readonly','placeholder'] }
-
-    constructor({multi}={}) {
-        super();
-        this.multi = multi;
-        this.$customValidity = null;
-        const shadowRoot = this.attachShadow({ mode: 'open' });
-        shadowRoot.innerHTML = `
+	
+	static get observedAttributes() {
+		return ['label', 'disabled', 'pattern', 'required', 'readonly', 'placeholder', 'publickey'];
+	}
+	
+	constructor({ multi } = {}) {
+		super();
+		this.multi = multi;
+		this.$customValidity = null;
+		const shadowRoot = this.attachShadow({ mode: 'open' });
+		shadowRoot.innerHTML = `
         <style>
         :host{
             box-sizing:border-box;
@@ -183,495 +187,508 @@ export default class XyInput extends HTMLElement {
         </style>
         <xy-tips id="input-con" dir="${this.errordir}" type="error">
             ${
-                this.icon?
-                '<xy-icon class="icon-pre" name='+this.icon+'></xy-icon>'
-                :
-                ''
-            }
-            <${multi?'textarea':'input'} id="input" name="${this.name}" class="input" ${this.type === 'number'?'min="'+this.min+'" max="'+this.max+'" step="'+this.step+'"':""} value="${this.defaultvalue}" type="${this.typeMap(this.type)}" placeholder="${this.placeholder}" minlength="${this.minlength}" rows="${this.rows}" maxlength="${this.maxlength}">${multi?'</textarea>':''}
+			this.icon ?
+				'<xy-icon class="icon-pre" name=' + this.icon + '></xy-icon>'
+				:
+				''
+			}
+            <${multi ? 'textarea' : 'input'} id="input" name="${this.name}" class="input" ${this.type === 'number' ? 'min="' + this.min + '" max="' + this.max + '" step="' + this.step + '"' : ''} value="${this.defaultvalue}" type="${this.typeMap(this.type)}" placeholder="${this.placeholder}" minlength="${this.minlength}" rows="${this.rows}" maxlength="${this.maxlength}">${multi ? '</textarea>' : ''}
             <slot></slot>
             ${
-                this.label&&!this.icon?
-                '<label class="input-label">'+this.label+'</label>'
-                :
-                ''
-            }
+			this.label && !this.icon ?
+				'<label class="input-label">' + this.label + '</label>'
+				:
+				''
+			}
             ${
-                this.type === 'password'&&!multi?
-                '<xy-button id="btn-pass" class="btn-right" icon="eye-close" type="flat" shape="circle"></xy-button>'
-                :
-                ''
-            }
+			this.type === 'password' && !multi ?
+				'<xy-button id="btn-pass" class="btn-right" icon="eye-close" type="flat" shape="circle"></xy-button>'
+				:
+				''
+			}
             ${
-                this.type === 'search'&&!multi?
-                '<xy-button id="btn-search" class="btn-right" icon="search" type="flat" shape="circle"></xy-button>'
-                :
-                ''
-            }
+			this.type === 'search' && !multi ?
+				'<xy-button id="btn-search" class="btn-right" icon="search" type="flat" shape="circle"></xy-button>'
+				:
+				''
+			}
             ${
-                this.type === 'number'&&!multi?
-                '<div class="btn-right btn-number"><xy-button id="btn-add" icon="up" type="flat"></xy-button><xy-button id="btn-sub" icon="down" type="flat"></xy-button></div>'
-                :
-                ''
-            }
+			this.type === 'number' && !multi ?
+				'<div class="btn-right btn-number"><xy-button id="btn-add" icon="up" type="flat"></xy-button><xy-button id="btn-sub" icon="down" type="flat"></xy-button></div>'
+				:
+				''
+			}
         </xy-tips>
-        `
-    }
-
-    checkValidity(){
-        if(this.novalidate||this.disabled||this.form&&this.form.novalidate){
-            return true;
-        }
-        if(this.validity){
-            this.inputCon.show = false;
-            this.invalid = false;
-            return true;
-        }else{
-            this.input.focus();
-            this.inputCon.show = 'show';
-            this.invalid = true;
-            if(this.input.validity.valueMissing){
-                this.inputCon.tips = this.input.validationMessage;
-            }else{
-                if(!this.customValidity.method(this)){
-                    this.inputCon.tips = this.customValidity.tips;
-                }else{
-                    this.inputCon.tips = this.errortips||this.input.validationMessage;
-                }
-            }
-            return false;
-        }
-    }
-    
-    connectedCallback() {
-        this.form = this.closest('xy-form');
-        this.input = this.shadowRoot.getElementById('input');
-        this.inputCon = this.shadowRoot.getElementById('input-con');
-        this.input.addEventListener('input',(ev)=>{
-            ev.stopPropagation();
-            this.checkValidity();
-            if(this.debounce){
-                this.timer && clearTimeout(this.timer);
-                this.timer = setTimeout(()=>{
-                    this.dispatchEvent(new CustomEvent('input',{
-                        detail:{
-                            value:this.value
-                        }
-                    }));
-                    if(this.list) {
-                        this.list.filter(this.value);
-                        this.list.show = true;
-                    }
-                },this.debounce)
-            }else{
-                this.dispatchEvent(new CustomEvent('input',{
-                    detail:{
-                        value:this.value
-                    }
-                }));
-                if(this.list) {
-                    this.list.filter(this.value);
-                    this.list.show = true;
-                }
-            }
-        })
-        this.input.addEventListener('change',()=>{
-            this.dispatchEvent(new CustomEvent('change',{
-                detail:{
-                    value:this.value
-                }
-            }));
-        })
-        this.input.addEventListener('focus',(ev)=>{
-            this.checkValidity();
-            if(this.list) {
-                const { left, top, height, width } = this.getBoundingClientRect();
-                this.list.style = `left:${left+ window.scrollX}px;top:${top + height + window.scrollY}px;min-width:${width}px`;
-                this.list.show = true;
-            }
-        })
-        this.input.addEventListener('keydown',(ev)=>{
-            switch (ev.key) {
-                case 'ArrowUp':
-                case 'ArrowDown':
-                    if(this.list){
-                        ev.preventDefault();
-                        this.list.show = true;
-                    }
-                    break;
-                case 'Escape':
-                case 'Tab':
-                    if(this.list){
-                        this.list.show = false;
-                    }
-                    break;
-                case 'Enter':
-                    if(this.list){
-                        ev.preventDefault();
-                        this.list.show = true;
-                    }else{
-                        this.dispatchEvent(new CustomEvent('submit',{
-                            detail:{
-                                value:this.value
-                            }
-                        }));
-                    }
-                    break;
-                default:
-                    break;
-            }
-        })
-        if(!this.multi){
-            this.btnPass = this.shadowRoot.getElementById('btn-pass');
-            this.btnAdd = this.shadowRoot.getElementById('btn-add');
-            this.btnSub = this.shadowRoot.getElementById('btn-sub');
-            this.btnSearch = this.shadowRoot.getElementById('btn-search');
-            if(this.btnSearch){
-                this.btnSearch.addEventListener('click',()=>{
-                    this.dispatchEvent(new CustomEvent('submit',{
-                        detail:{
-                            value:this.value
-                        }
-                    }));
-                })
-            }
-            if(this.btnPass){
-                this.btnPass.addEventListener('click',()=>{
-                    this.password = !this.password;
-                    if(this.password){
-                        this.input.setAttribute('type','text');
-                        this.btnPass.icon = 'eye';
-                    }else{
-                        this.input.setAttribute('type','password');
-                        this.btnPass.icon = 'eye-close';
-                    }
-                    this.input.focus();
-                })
-            }
-            if(this.btnAdd){
-                this.btnAdd.addEventListener('click',()=>{
-                    this.input.stepUp();
-                    this.dispatchEvent(new CustomEvent('change',{
-                        detail:{
-                            value:this.value
-                        }
-                    }));
-                })
-            }
-            if(this.btnSub){
-                this.btnSub.addEventListener('click',()=>{
-                    this.input.stepDown();
-                    this.dispatchEvent(new CustomEvent('change',{
-                        detail:{
-                            value:this.value
-                        }
-                    }));
-                })
-            }
-            this.pattern = this.pattern;
-        }
-        document.addEventListener('mousedown', this.setlist);
-
-        if(this.list) {
-            document.body.appendChild(this.list);
-            this.list.addEventListener('submit', (ev) => {
-                this.focus();
-                if(ev.target.value){
-                    this.value = ev.target.value;
-                    this.list.show = false;
-                }
-            })
-        }
-        this.disabled = this.disabled;
-        this.required = this.required;
-        this.readonly = this.readonly;
-    }
-
-    setlist = (ev) => {
-        if(this.list) {
-            if (this.contains(ev.target) || this.list.contains(ev.target)) {
-                this.list.show = true;
-            } else {
-                this.list.show = false;
-            }
-        }
-    }
-
-    disconnectedCallback() {
-        document.removeEventListener('mousedown', this.setlist);
-    }
-
-    typeMap(type) {
-        switch (type) {
-            case 'password':
-            case 'number':
-            case 'email':
-            case 'tel':
-            case 'url':
-                break;
-            default:
-                type = 'text'
-                break;
-        }
-        return type;
-    }
-
-    focus() {
-        this.input.focus();
-    }
-
-    reset() {
-        this.input.value = this.defaultvalue;
-        this.inputCon.show = false;
-        this.invalid = false;
-    }
-
-    get customValidity() {
-        return this.$customValidity||{
-            method:()=>true
-        };
-    }
-
-    get value() {
-        return this.input.value;
-    }
-
-    get debounce() {
-        return this.getAttribute('debounce');
-    }
-
-    get novalidate() {
-        return this.getAttribute('novalidate')!==null;
-    }
-
-    get name() {
-        return this.getAttribute('name')||'';
-    }
-
-    get invalid() {
-        return this.getAttribute('invalid')!==null;
-    }
-
-    get readonly() {
-        return this.getAttribute('readonly')!==null;
-    }
-
-    get validity() {
-        return this.input.checkValidity()&&this.customValidity.method(this);
-    }
-
-    get errordir() {
-        return this.getAttribute('errordir')||'top';
-    }
-
-    get defaultvalue() {
-        return this.getAttribute('defaultvalue')||'';
-    }
-    get rows() {
-        return this.getAttribute('rows')||3;
-    }
-
-    get icon() {
-        return this.getAttribute('icon');
-    }
-
-    get type() {
-        return this.getAttribute('type');
-    }
-
-    get disabled() {
-        return this.getAttribute('disabled')!==null;
-    }
-
-    get label() {
-        return this.getAttribute('label')||'';
-    }
-
-    get placeholder() {
-        return this.getAttribute('placeholder')||this.label;
-    }
-
-    get min() {
-        return this.getAttribute('min')||0;
-    }
-
-    get max() {
-        return this.getAttribute('max')||Infinity;
-    }
-
-    get minlength() {
-        return this.getAttribute('minlength')||'';
-    }
-
-    get maxlength() {
-        return this.getAttribute('maxlength')||'';
-    }
-
-    get step() {
-        return this.getAttribute('step')||1;
-    }
-
-    get required() {
-        return this.getAttribute('required')!==null;
-    }
-
-    get pattern() {
-        return this.getAttribute('pattern');
-    }
-
-    get errortips() {
-        return this.getAttribute('errortips');
-    }
-
-    get list() {
-        const list = this.getAttribute('list');
-        if(list) {
-            return this.getRootNode().getElementById(list);
-        }
-        return null;
-    }
-
-    get options() {
-        if(this.list) {
-            return this.list.options;
-        }
-        return [];
-    }
-
-    set disabled(value) {
-        if(value===null||value===false){
-            this.removeAttribute('disabled');
-        }else{
-            this.setAttribute('disabled', '');
-        }
-    }
-
-    set required(value) {
-        if(value===null||value===false){
-            this.removeAttribute('required');
-        }else{
-            this.setAttribute('required', '');
-        }
-    }
-
-    set readonly(value) {
-        if(value===null||value===false){
-            this.removeAttribute('readonly');
-        }else{
-            this.setAttribute('readonly', '');
-        }
-    }
-
-    set invalid(value) {
-        if(value===null||value===false){
-            this.removeAttribute('invalid');
-        }else{
-            this.setAttribute('invalid', '');
-        }
-    }
-
-    set pattern(value) {
-        if(value===null||value===false){
-            this.removeAttribute('pattern');
-        }else{
-            this.setAttribute('pattern', value);
-        }
-    }
-
-    set label(value) {
-        this.setAttribute('label', value);
-    }
-
-    set icon(value) {
-        this.setAttribute('icon', value);
-    }
-
-    set placeholder(value) {
-        this.setAttribute('placeholder', value);
-    }
-    
-    set customValidity(object) {
-        this.$customValidity = object;
-    }
-
-    set novalidate(value) {
-        if(value===null||value===false){
-            this.removeAttribute('novalidate');
-        }else{
-            this.setAttribute('novalidate', '');
-        }
-    }
-
-    set value(value) {
-        this.input.value = value;
-        /*
-        this.checkValidity();
-        this.dispatchEvent(new CustomEvent('change',{
-            detail:{
-                value:this.value
-            }
-        }));
-        */
-    }
-
-    attributeChangedCallback (name, oldValue, newValue) {
-        if(name == 'disabled' && this.input){
-            if(newValue!==null){
-                this.input.parentNode.setAttribute('tabindex', '-1');
-            }else{
-                this.input.parentNode.removeAttribute('tabindex');
-            }
-        }
-        if(name == 'pattern' && this.input){
-            if(newValue!==null){
-                this.input.setAttribute('pattern', newValue);
-            }else{
-                this.input.removeAttribute('pattern');
-            }
-        }
-        if(name == 'placeholder' && this.input){
-            if(newValue!==null){
-                this.input.setAttribute('placeholder', newValue);
-            }else{
-                this.input.removeAttribute('placeholder');
-            }
-        }
-        if(name == 'required' && this.input){
-            if(newValue!==null){
-                this.input.setAttribute('required', 'required');
-            }else{
-                this.input.removeAttribute('required');
-            }
-        }
-        if(name == 'readonly' && this.input){
-            if(newValue!==null){
-                this.input.setAttribute('readonly', 'readonly');
-            }else{
-                this.input.removeAttribute('readonly');
-            }
-        }
-    }
-    
+        `;
+	}
+	
+	checkValidity() {
+		if (this.novalidate || this.disabled || this.form && this.form.novalidate) {
+			return true;
+		}
+		if (this.validity) {
+			this.inputCon.show = false;
+			this.invalid = false;
+			return true;
+		} else {
+			this.input.focus();
+			this.inputCon.show = 'show';
+			this.invalid = true;
+			if (this.input.validity.valueMissing) {
+				this.inputCon.tips = this.input.validationMessage;
+			} else {
+				if (!this.customValidity.method(this)) {
+					this.inputCon.tips = this.customValidity.tips;
+				} else {
+					this.inputCon.tips = this.errortips || this.input.validationMessage;
+				}
+			}
+			return false;
+		}
+	}
+	
+	connectedCallback() {
+		this.form = this.closest('xy-form');
+		this.input = this.shadowRoot.getElementById('input');
+		this.inputCon = this.shadowRoot.getElementById('input-con');
+		this.input.addEventListener('input', (ev) => {
+			ev.stopPropagation();
+			this.checkValidity();
+			if (this.debounce) {
+				this.timer && clearTimeout(this.timer);
+				this.timer = setTimeout(() => {
+					this.dispatchEvent(new CustomEvent('input', {
+						detail: {
+							value: this.encrypt()
+						}
+					}));
+					if (this.list) {
+						this.list.filter(this.encrypt());
+						this.list.show = true;
+					}
+				}, this.debounce);
+			} else {
+				this.dispatchEvent(new CustomEvent('input', {
+					detail: {
+						value: this.encrypt()
+					}
+				}));
+				if (this.list) {
+					this.list.filter(this.encrypt());
+					this.list.show = true;
+				}
+			}
+		});
+		this.input.addEventListener('change', () => {
+			this.dispatchEvent(new CustomEvent('change', {
+				detail: {
+					value: this.encrypt()
+				}
+			}));
+		});
+		this.input.addEventListener('focus', (ev) => {
+			this.checkValidity();
+			if (this.list) {
+				const { left, top, height, width } = this.getBoundingClientRect();
+				this.list.style = `left:${left + window.scrollX}px;top:${top + height + window.scrollY}px;min-width:${width}px`;
+				this.list.show = true;
+			}
+		});
+		this.input.addEventListener('keydown', (ev) => {
+			switch (ev.key) {
+				case 'ArrowUp':
+				case 'ArrowDown':
+					if (this.list) {
+						ev.preventDefault();
+						this.list.show = true;
+					}
+					break;
+				case 'Escape':
+				case 'Tab':
+					if (this.list) {
+						this.list.show = false;
+					}
+					break;
+				case 'Enter':
+					if (this.list) {
+						ev.preventDefault();
+						this.list.show = true;
+					} else {
+						this.dispatchEvent(new CustomEvent('submit', {
+							detail: {
+								value: this.encrypt()
+							}
+						}));
+					}
+					break;
+				default:
+					break;
+			}
+		});
+		if (!this.multi) {
+			this.btnPass = this.shadowRoot.getElementById('btn-pass');
+			this.btnAdd = this.shadowRoot.getElementById('btn-add');
+			this.btnSub = this.shadowRoot.getElementById('btn-sub');
+			this.btnSearch = this.shadowRoot.getElementById('btn-search');
+			if (this.btnSearch) {
+				this.btnSearch.addEventListener('click', () => {
+					this.dispatchEvent(new CustomEvent('submit', {
+						detail: {
+							value: this.encrypt()
+						}
+					}));
+				});
+			}
+			if (this.btnPass) {
+				this.btnPass.addEventListener('click', () => {
+					this.password = !this.password;
+					if (this.password) {
+						this.input.setAttribute('type', 'text');
+						this.btnPass.icon = 'eye';
+					} else {
+						this.input.setAttribute('type', 'password');
+						this.btnPass.icon = 'eye-close';
+					}
+					this.input.focus();
+				});
+			}
+			if (this.btnAdd) {
+				this.btnAdd.addEventListener('click', () => {
+					this.input.stepUp();
+					this.dispatchEvent(new CustomEvent('change', {
+						detail: {
+							value: this.encrypt()
+						}
+					}));
+				});
+			}
+			if (this.btnSub) {
+				this.btnSub.addEventListener('click', () => {
+					this.input.stepDown();
+					this.dispatchEvent(new CustomEvent('change', {
+						detail: {
+							value: this.encrypt()
+						}
+					}));
+				});
+			}
+			this.pattern = this.pattern;
+		}
+		document.addEventListener('mousedown', this.setlist);
+		
+		if (this.list) {
+			document.body.appendChild(this.list);
+			this.list.addEventListener('submit', (ev) => {
+				this.focus();
+				if (ev.target.value) {
+					this.value = ev.target.value;
+					this.list.show = false;
+				}
+			});
+		}
+		this.disabled = this.disabled;
+		this.required = this.required;
+		this.readonly = this.readonly;
+	}
+	
+	setlist = (ev) => {
+		if (this.list) {
+			if (this.contains(ev.target) || this.list.contains(ev.target)) {
+				this.list.show = true;
+			} else {
+				this.list.show = false;
+			}
+		}
+	};
+	
+	disconnectedCallback() {
+		document.removeEventListener('mousedown', this.setlist);
+	}
+	
+	typeMap(type) {
+		switch (type) {
+			case 'password':
+			case 'number':
+			case 'email':
+			case 'tel':
+			case 'url':
+				break;
+			default:
+				type = 'text';
+				break;
+		}
+		return type;
+	}
+	
+	focus() {
+		this.input.focus();
+	}
+	
+	reset() {
+		this.input.value = this.defaultvalue;
+		this.inputCon.show = false;
+		this.invalid = false;
+	}
+	
+	get customValidity() {
+		return this.$customValidity || {
+			method: () => true
+		};
+	}
+	
+	get value() {
+		if (this.type === 'password' && this.publickey && this.publickey != 'null') {
+			// UmqrSpL4uz8TAezaWfNScQ==
+			return encryptDES(this.input.value, this.publickey);
+		}
+		return this.input.value;
+	}
+	
+	get debounce() {
+		return this.getAttribute('debounce');
+	}
+	
+	get novalidate() {
+		return this.getAttribute('novalidate') !== null;
+	}
+	
+	get name() {
+		return this.getAttribute('name') || '';
+	}
+	
+	get invalid() {
+		return this.getAttribute('invalid') !== null;
+	}
+	
+	get readonly() {
+		return this.getAttribute('readonly') !== null;
+	}
+	
+	get validity() {
+		return this.input.checkValidity() && this.customValidity.method(this);
+	}
+	
+	get errordir() {
+		return this.getAttribute('errordir') || 'top';
+	}
+	
+	get defaultvalue() {
+		return this.getAttribute('defaultvalue') || '';
+	}
+	
+	get rows() {
+		return this.getAttribute('rows') || 3;
+	}
+	
+	get icon() {
+		return this.getAttribute('icon');
+	}
+	
+	get type() {
+		return this.getAttribute('type');
+	}
+	
+	get publickey() {
+		return this.getAttribute('publickey');
+	}
+	
+	get disabled() {
+		return this.getAttribute('disabled') !== null;
+	}
+	
+	get label() {
+		return this.getAttribute('label') || '';
+	}
+	
+	get placeholder() {
+		return this.getAttribute('placeholder') || this.label;
+	}
+	
+	get min() {
+		return this.getAttribute('min') || 0;
+	}
+	
+	get max() {
+		return this.getAttribute('max') || Infinity;
+	}
+	
+	get minlength() {
+		return this.getAttribute('minlength') || '';
+	}
+	
+	get maxlength() {
+		return this.getAttribute('maxlength') || '';
+	}
+	
+	get step() {
+		return this.getAttribute('step') || 1;
+	}
+	
+	get required() {
+		return this.getAttribute('required') !== null;
+	}
+	
+	get pattern() {
+		return this.getAttribute('pattern');
+	}
+	
+	get errortips() {
+		return this.getAttribute('errortips');
+	}
+	
+	get list() {
+		const list = this.getAttribute('list');
+		if (list) {
+			return this.getRootNode().getElementById(list);
+		}
+		return null;
+	}
+	
+	get options() {
+		if (this.list) {
+			return this.list.options;
+		}
+		return [];
+	}
+	
+	set disabled(value) {
+		if (value === null || value === false) {
+			this.removeAttribute('disabled');
+		} else {
+			this.setAttribute('disabled', '');
+		}
+	}
+	
+	set required(value) {
+		if (value === null || value === false) {
+			this.removeAttribute('required');
+		} else {
+			this.setAttribute('required', '');
+		}
+	}
+	
+	set readonly(value) {
+		if (value === null || value === false) {
+			this.removeAttribute('readonly');
+		} else {
+			this.setAttribute('readonly', '');
+		}
+	}
+	
+	set invalid(value) {
+		if (value === null || value === false) {
+			this.removeAttribute('invalid');
+		} else {
+			this.setAttribute('invalid', '');
+		}
+	}
+	
+	set pattern(value) {
+		if (value === null || value === false) {
+			this.removeAttribute('pattern');
+		} else {
+			this.setAttribute('pattern', value);
+		}
+	}
+	
+	set label(value) {
+		this.setAttribute('label', value);
+	}
+	
+	set icon(value) {
+		this.setAttribute('icon', value);
+	}
+	
+	set placeholder(value) {
+		this.setAttribute('placeholder', value);
+	}
+	
+	set customValidity(object) {
+		this.$customValidity = object;
+	}
+	
+	set novalidate(value) {
+		if (value === null || value === false) {
+			this.removeAttribute('novalidate');
+		} else {
+			this.setAttribute('novalidate', '');
+		}
+	}
+	
+	set value(value) {
+		this.input.value = value;
+		/*
+		this.checkValidity();
+		this.dispatchEvent(new CustomEvent('change',{
+				detail:{
+						value:this.value
+				}
+		}));
+		*/
+	}
+	
+	encrypt() {
+		return this.value;
+	}
+	
+	attributeChangedCallback(name, oldValue, newValue) {
+		if (name == 'disabled' && this.input) {
+			if (newValue !== null) {
+				this.input.parentNode.setAttribute('tabindex', '-1');
+			} else {
+				this.input.parentNode.removeAttribute('tabindex');
+			}
+		}
+		if (name == 'pattern' && this.input) {
+			if (newValue !== null) {
+				this.input.setAttribute('pattern', newValue);
+			} else {
+				this.input.removeAttribute('pattern');
+			}
+		}
+		if (name == 'placeholder' && this.input) {
+			if (newValue !== null) {
+				this.input.setAttribute('placeholder', newValue);
+			} else {
+				this.input.removeAttribute('placeholder');
+			}
+		}
+		if (name == 'required' && this.input) {
+			if (newValue !== null) {
+				this.input.setAttribute('required', 'required');
+			} else {
+				this.input.removeAttribute('required');
+			}
+		}
+		if (name == 'readonly' && this.input) {
+			if (newValue !== null) {
+				this.input.setAttribute('readonly', 'readonly');
+			} else {
+				this.input.removeAttribute('readonly');
+			}
+		}
+	}
+	
 }
 
 class XyTextarea extends XyInput {
-    constructor() {
-        super({multi:true});
-    }
+	constructor() {
+		super({ multi: true });
+	}
 }
 
-if(!customElements.get('xy-input')){
-    customElements.define('xy-input', XyInput);
+if (!customElements.get('xy-input')) {
+	customElements.define('xy-input', XyInput);
 }
-if(!customElements.get('xy-textarea')){
-    customElements.define('xy-textarea', XyTextarea);
+if (!customElements.get('xy-textarea')) {
+	customElements.define('xy-textarea', XyTextarea);
 }
 
 class XyInputGroup extends HTMLElement {
-    constructor() {
-        super();
-        const shadowRoot = this.attachShadow({ mode: 'open' });
-        shadowRoot.innerHTML = `
+	constructor() {
+		super();
+		const shadowRoot = this.attachShadow({ mode: 'open' });
+		shadowRoot.innerHTML = `
         <style>
         :host {
             display:flex;
@@ -695,10 +712,10 @@ class XyInputGroup extends HTMLElement {
         }
         </style>
         <slot></slot>
-        `
-    }
+        `;
+	}
 }
 
-if(!customElements.get('xy-input-group')){
-    customElements.define('xy-input-group', XyInputGroup);
+if (!customElements.get('xy-input-group')) {
+	customElements.define('xy-input-group', XyInputGroup);
 }

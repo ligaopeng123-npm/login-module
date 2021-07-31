@@ -1,30 +1,35 @@
 {
-  "name": "login-modules",
-  "version": "0.0.3",
-  "description": "登录模块",
-  "main": "src/index.ts",
-  "private": false,
-  "scripts": {
-    "start": "set NODE_ENV=development&&webpack serve",
-    "build:dev": "set NODE_ENV=development&&webpack build",
-    "build": "set NODE_ENV=production&&webpack build",
-    "watch": "webpack --watch",
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "devDependencies": {
-    "file-loader": "^6.2.0",
-    "html-webpack-plugin": "^5.3.1",
-    "ts-loader": "^9.2.2",
-    "typescript": "^4.3.2",
-    "url-loader": "^4.1.1",
-    "webpack": "^5.38.1",
-    "webpack-cli": "^4.7.0",
-    "webpack-dev-server": "^3.11.2"
-  },
-  "dependencies": {
-
-  }
+    "name": "@gaopeng123/module",
+    "version": "0.2.2",
+    "description": "登录模块",
+    "main": "dist/main.js",
+    "typings": "dist/typing.ts",
+    "private": false,
+    "scripts": {
+        "start": "set NODE_ENV=development&&webpack serve",
+        "build:dev": "set NODE_ENV=development&&webpack build",
+        "build": "set NODE_ENV=production&&webpack build",
+        "watch": "webpack --watch",
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "devDependencies": {
+        "@babel/core": "^7.14.3",
+        "@babel/plugin-proposal-class-properties": "^7.13.0",
+        "@babel/preset-env": "^7.14.4",
+        "babel-loader": "^8.2.2",
+        "file-loader": "^6.2.0",
+        "html-webpack-plugin": "^5.3.1",
+        "ts-loader": "^9.2.2",
+        "typescript": "^4.3.2",
+        "url-loader": "^4.1.1",
+        "webpack": "^5.38.1",
+        "webpack-cli": "^4.7.0",
+        "webpack-dev-server": "^3.11.2"
+    },
+    "dependencies": {
+        "crypto-js": "^4.0.0"
+    }
 }

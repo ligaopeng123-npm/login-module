@@ -3,46 +3,80 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 const NODE_ENV = process.env.NODE_ENV.trimEnd();
 
 module.exports = {
-	mode: 'development', // 环境管理
+	mode: NODE_ENV === 'production' ? 'production' : 'development',// 环境管理
+	devtool: NODE_ENV == 'production' ? false : 'inline-source-map',
 	entry: './src/index.ts',
-	devtool: 'inline-source-map', // source map
 	resolve: {
-		extensions: ['.tsx', '.ts', '.js'],
+		extensions: ['.tsx', '.ts', '.js']
 	},
 	module: {
 		rules: [
 			{
 				test: /\.tsx?$/,
 				use: 'ts-loader',
-				exclude: /node_modules/,
+				exclude: /node_modules/
+			},
+			{
+				test: /\.js$/,
+				use: {
+					loader: 'babel-loader',
+					options: { // 用 babel-loader 需要把 es6 -> es5
+						presets: [
+							// '@babel/preset-env', // 这里面就是把es6 -> es5的模块
+							// 按需加载es版本
+							['@babel/env', {
+								modules: false,
+								useBuiltIns: false,
+								targets: {
+									browsers: [
+										'Chrome >= 88'
+									]
+								}
+							}]
+						],
+						plugins: [
+							// [
+							//     '@babel/plugin-proposal-decorators',
+							//     {'legacy': true}
+							// ],
+							[   // 支持类(class)的写法
+								'@babel/plugin-proposal-class-properties',
+								{ 'loose': true } // 宽松模式
+							]
+							// '@babel/plugin-transform-runtime'
+						]
+					}
+				},
+				include: path.resolve(__dirname, 'src'),
+				exclude: /node_modules/
 			},
 			{
 				test: /\.(gif|png|jpe|jpg?g)$/i,
-				loader: "url-loader", // url-loader 依赖于  file-loader 要使用url-loader必须安装file-loader
+				loader: 'url-loader', // url-loader 依赖于  file-loader 要使用url-loader必须安装file-loader
 				options: {
-					name: "[name].[ext]", // 文件名.hash.文件扩展名 默认格式为[hash].[ext]，没有文件名
+					name: '[name].[ext]', // 文件名.hash.文件扩展名 默认格式为[hash].[ext]，没有文件名
 					limit: 1024 * 8, // 将小于8KB的图片转换成base64的格式
-					outputPath: "assets/", // 为你的文件配置自定义 output 输出目录 ; 用来处理图片路径问题
-					publicPath: "assets/", // 为你的文件配置自定义 public 发布目录 ; 用来处理图片路径问题
-				},
+					outputPath: 'assets/', // 为你的文件配置自定义 output 输出目录 ; 用来处理图片路径问题
+					publicPath: 'assets/' // 为你的文件配置自定义 public 发布目录 ; 用来处理图片路径问题
+				}
 			},
 			{
 				test: /\.svg/,
-				loader: "url-loader", // url-loader 依赖于  file-loader 要使用url-loader必须安装file-loader
+				loader: 'url-loader', // url-loader 依赖于  file-loader 要使用url-loader必须安装file-loader
 				options: {
-					name: "[name].[ext]", // 文件名.hash.文件扩展名 默认格式为[hash].[ext]，没有文件名
+					name: '[name].[ext]', // 文件名.hash.文件扩展名 默认格式为[hash].[ext]，没有文件名
 					limit: 1024 * 8, // 将小于8KB的图片转换成base64的格式
-					outputPath: "iconfont/", // 为你的文件配置自定义 output 输出目录 ; 用来处理图片路径问题
-					publicPath: "assets/", // 为你的文件配置自定义 public 发布目录 ; 用来处理图片路径问题
-				},
-			},
-		],
+					outputPath: 'iconfont/', // 为你的文件配置自定义 output 输出目录 ; 用来处理图片路径问题
+					publicPath: 'assets/' // 为你的文件配置自定义 public 发布目录 ; 用来处理图片路径问题
+				}
+			}
+		]
 	},
 	plugins: [
 		new HtmlWebpackPlugin({
 			title: '登录',
-			template: "./src/index.html"
-		}),
+			template: './src/index.html'
+		})
 	],
 	experiments: {
 		outputModule: true // 让模块可以使用import导入使用
@@ -50,10 +84,9 @@ module.exports = {
 	output: {
 		filename: 'main.js',
 		libraryTarget: 'module', //module es6模式 umd模式
-		path: path.resolve(__dirname, 'dist'),
-		clean: true, // 清理冗余文件
+		path: path.resolve(__dirname, 'dist')
+		// clean: true, // 清理冗余文件
 	},
-	devtool: NODE_ENV == 'production' ? false : 'inline-source-map',
 	target: 'web',
 	devServer: {
 		contentBase: path.resolve(__dirname, 'dist'),
@@ -62,6 +95,11 @@ module.exports = {
 		// 端口
 		port: 5000,
 		// 打开浏览器
-		open: true
+		open: true,
+		proxy: {
+			'/api': {
+				target: 'http://localhost:8000'
+			}
+		}
 	}
 };

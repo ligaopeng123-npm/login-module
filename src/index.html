@@ -1,26 +1,42 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Title</title>
+    <meta charset="UTF-8">
+    <title>Title</title>
 </head>
 <body style="margin: 0px;">
-	<login-module url="https://www.baidu.com/"
-                  user="account"
-                  password="password"
-                  id="form"
-                  style="background-image: url(/assets/background.jpg)"
-                  body-style="right: 200px;"
-                  title="系统">
-    </login-module>
-    <script>
-        const form = document.querySelector('#form');
-        form.addEventListener('submit', (data)=> {
-        	console.log(data)
-        });
-        form.addEventListener('afterSubmit', (data)=> {
-	        console.log(data)
-        });
-    </script>
+<!--<login-module-->
+<!--url="/aidata/user/login"-->
+<!--method="POST"-->
+<!--user="userId"-->
+<!--password="password"-->
+<!--captcha="verificationCode"-->
+<!--captchamethod="GET"-->
+<!--captchaurl="/aidata/user/captcha"-->
+<!--id="form"-->
+<!--main-style="background-image: url(./assets/background.jpg)"-->
+<!--body-style="right: 200px;"-->
+<!--title="系统">-->
+<!--</login-module>-->
+<login-module
+        url="http://***"
+        method="POST"
+        user="account"
+        password="password"
+        id="form"
+        publickey="***"
+        body-style="right: 200px;"
+        main-style="background-image: url(./assets/background.jpg)"
+        title="系统">
+</login-module>
+<script>
+	const form = document.querySelector('#form');
+	form.addEventListener('submit', (data) => {
+		console.log(data);
+	});
+	form.addEventListener('afterSubmit', (data) => {
+		console.log(data);
+	});
+</script>
 </body>
 </html>
