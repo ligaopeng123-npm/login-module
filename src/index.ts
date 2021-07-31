@@ -3,7 +3,6 @@ import './xy-ui/components/xy-checkbox.js';
 import './xy-ui/components/xy-form.js';
 // 静态资源依赖
 import './assets/icon.svg';
-import './assets/background.jpg';
 
 export default class LogInModule extends HTMLElement {
 	shadow: any = null;
@@ -294,12 +293,22 @@ export default class LogInModule extends HTMLElement {
 					display: flex;
 				    justify-content: center;
 				    align-items: center;
-				    background-image: url("assets/background.jpg");
 				    background-repeat:no-repeat;
                     background-attachment:fixed;
                     background-position:center;
                     background-size: cover;
+                    background-color:black;
+                    background-image:radial-gradient(white, rgba(255,255,255,.2) 2px, transparent 40px),
+					radial-gradient(white, rgba(255,255,255,.15) 1px, transparent 30px),
+					radial-gradient(white, rgba(255,255,255,.1) 2px, transparent 40px),
+					radial-gradient(rgba(255,255,255,.4), rgba(255,255,255,.1) 2px, transparent 30px);
+					
 				}
+				.login-module-bg {
+					background-size: 550px 550px, 350px 350px, 250px 250px, 150px 150px;
+					background-position: 0 0, 40px 60px, 130px 270px, 70px 100px;
+				}
+				
 				.login-title {
 					color: #333;
 					text-align: center;
@@ -317,7 +326,7 @@ export default class LogInModule extends HTMLElement {
 				}
 
 			</style>
-			<div class="login-module" id="login" style="${config[`main-style`]}">
+			<div class="login-module ${config[`main-style`] ? '' : 'login-module-bg'}" id="login" style="${config[`main-style`]}">
 				<xy-form id="login-module" action="${url}" method="${method}" style="${config['body-style']}">
 					<xy-form-item class="login-title">
 						<span id="title">${title}</span>
