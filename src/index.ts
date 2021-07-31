@@ -144,6 +144,7 @@ export default class LogInModule extends HTMLElement {
 	
 	removeEvents() {
 		this.form.removeEventListener('submit', this.watchSubmit);
+		this.form.removeEventListener('submitError', this.submitError);
 		this.shadow.querySelector(`#bth-login`).removeEventListener('click', this.onSubmit);
 		if (this.getConfig().captcha) {
 			this.captchaImg?.removeEventListener('click', this.setCaptcha);
@@ -152,6 +153,7 @@ export default class LogInModule extends HTMLElement {
 	
 	addEvents() {
 		this.form.addEventListener('submit', this.watchSubmit);
+		this.form.addEventListener('submitError', this.submitError);
 		this.shadow.querySelector(`#bth-login`).addEventListener('click', this.onSubmit);
 		this.addCaptchaEvent();
 	}
@@ -204,6 +206,16 @@ export default class LogInModule extends HTMLElement {
 		const { data, token } = res?.detail;
 		this.dispatchEvent(new CustomEvent('afterSubmit', {
 			detail: this.getDetail({ data: this.form.formdata?.json, token, response: data })
+		}));
+	};
+	
+	/**
+	 * 提交出错
+	 * @param data
+	 */
+	submitError = (data: any) => {
+		this.dispatchEvent(new CustomEvent('submitError', {
+			detail: data
 		}));
 	};
 	

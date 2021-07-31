@@ -8,7 +8,7 @@
 | ---------- | ------------------------------------------------------- | ------ | ------------ |
 | title      | 项目上面的项目名称                                      | string | 某某系统     |
 | id         | 拼接本地数据存储的key值                                 | string | login-module |
-| main-style | 登录页样式                                     | string | ''           |
+| main-style | 登录页样式，可替换背景图                           | string | ''           |
 | body-style      | form表单的样式                                     | string | ''           |
 | method     | 请求类型 GET POST                                       | string | POST         |
 | url        | 是否需要组件去处理登录逻辑，<br />默认fetch下发数据请求 | string | null         |
@@ -24,6 +24,7 @@
 ```
 submit事件 在点击登录时触发，传递的登录信息在，detail字段中
 afterSubmit 在登录数据下发服务端后触发 用于处理登录后的路由跳转等逻辑
+submitError 在fetch出错情况下触发
 ```
 
 ```tsx
@@ -41,7 +42,11 @@ afterSubmit 在登录数据下发服务端后触发 用于处理登录后的路�
         body-style="right: 200px;"
         title="系统">
 </login-module>
-    <script>
+```
+
+```js
+// 事件订阅
+<script>
         const form = document.querySelector('#form');
         form.addEventListener('submit', (data)=> {
         	console.log(data)
@@ -52,20 +57,3 @@ afterSubmit 在登录数据下发服务端后触发 用于处理登录后的路�
     </script>
 ```
 
-```tsx
-/**
- * 处理react tsx中直接使用web components报错问题
- */
-interface LoginModuleProps extends React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> {
-	title: string,
-	...
-}
-
-declare global {
-	namespace JSX {
-		interface IntrinsicElements {
-			'login-module': LoginModuleProps
-		}
-	}
-}
-```
