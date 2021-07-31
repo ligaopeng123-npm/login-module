@@ -1,5 +1,5 @@
 {
-    "name": "@gaopeng123/module",
+    "name": "@gaopeng123/loginModule",
     "version": "0.2.2",
     "description": "登录模块",
     "main": "dist/main.js",
