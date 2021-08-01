@@ -54,6 +54,9 @@ submitError 在fetch出错情况下触发
         form.addEventListener('afterSubmit', (data)=> {
 	        console.log(data)
         });
+        form.addEventListener('submitError', (data)=> {
+        	        console.log(data)
+                });
     </script>
 ```
 
