@@ -48,15 +48,18 @@ submitError 在fetch出错情况下触发
 // 事件订阅
 <script>
         const form = document.querySelector('#form');
+		// 提交事件
         form.addEventListener('submit', (data)=> {
         	console.log(data)
         });
+        // fetch请求响应后
         form.addEventListener('afterSubmit', (data)=> {
 	        console.log(data)
         });
+        // fetch请求失败后
         form.addEventListener('submitError', (data)=> {
-        	        console.log(data)
-                });
+            console.log(data)
+        });
     </script>
 ```
 
