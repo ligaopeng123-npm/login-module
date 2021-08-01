@@ -69,7 +69,8 @@ export default class XyForm extends HTMLElement {
 		this.hideLaoding();
 		this.dispatchEvent(new CustomEvent('submitError', {
 			detail: {
-				data: this.formdata.json,
+				// 解除引用关系 防止submitError时获取不到
+				data: JSON.parse(JSON.stringify(this.formdata.json)),
 				error: error
 			}
 		}));

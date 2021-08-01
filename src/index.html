@@ -31,10 +31,13 @@
 <script>
 	const form = document.querySelector('#form');
 	form.addEventListener('submit', (data) => {
-		console.log(data);
+		// console.log(data);
 	});
 	form.addEventListener('afterSubmit', (data) => {
-		console.log(data);
+		// console.log(data);
+	});
+	form.addEventListener('submitError', (data) => {
+		console.log(data.detail.data);
 	});
 </script>
 </body>

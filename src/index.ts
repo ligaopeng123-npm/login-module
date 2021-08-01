@@ -215,7 +215,8 @@ export default class LogInModule extends HTMLElement {
 	 */
 	submitError = (data: any) => {
 		this.dispatchEvent(new CustomEvent('submitError', {
-			detail: data
+			// 避免数据重复
+			detail: data?.detail
 		}));
 	};
 	
