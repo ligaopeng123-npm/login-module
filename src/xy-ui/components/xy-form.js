@@ -1,4 +1,5 @@
 import XyMessage from './xy-message.js';
+import { post, get } from '@gaopeng123/fetch';
 
 export default class XyForm extends HTMLElement {
 	
@@ -33,7 +34,8 @@ export default class XyForm extends HTMLElement {
             grid-column:span 2;
         }
         </style>
-        <form id="form" method="${this.method}" action="${this.action}" ${this.novalidate ? 'novalidate' : ''}>
+        <form style="${this.style}" id="form" method="${this.method}" action="${this.action}"
+			${this.novalidate ? 'novalidate' : ''}>
             <slot></slot>
         </form>
         `;
@@ -87,11 +89,6 @@ export default class XyForm extends HTMLElement {
 		 */
 		let resData = data;
 		
-		if (this.checkStatus(resData)) {
-			resData = await data.json();
-		} else {
-			XyMessage.error(`登录失败，请检查网络设置！`);
-		}
 		this.dispatchEvent(new CustomEvent('submit', {
 			detail: {
 				data: resData,
@@ -103,27 +100,18 @@ export default class XyForm extends HTMLElement {
 	async submit() {
 		if (this.checkValidity() && !this.disabled) {
 			//validity
-			if (this.action) {
+			if (this.action && this.action != 'null') {
 				this.submitBtn && (this.submitBtn.loading = true);
 				if (this.method == 'GET') {
 					const formdata = new URLSearchParams(this.formdata).toString();
-					fetch(`${this.action}?${formdata}`).then(data => {
+					get(`${this.action}?${formdata}`).then(data => {
 						this.afterSubmit(data);
 					}).catch(error => {
 						this.catchError(error);
 					});
-					
-					this.hideLaoding();
-				} else {
-					fetch(this.action, {
-						method: 'POST',
-						body: JSON.stringify(this.formdata.json),
-						mode: 'cors',
-						headers: {
-							'content-type': 'application/json'
-							// 'Access-Control-Expose-Headers': 'token',
-							// 'Access-Control-Allow-Headers': 'token'
-						}
+				} else if (this.method == 'POST') {
+					post(this.action, {
+						body: this.formdata.json
 					}).then((data) => {
 						this.afterSubmit(data);
 					}).catch((error) => {
@@ -176,6 +164,10 @@ export default class XyForm extends HTMLElement {
 	
 	get action() {
 		return this.getAttribute('action') || '';
+	}
+	
+	get style() {
+		return this.getAttribute('form-style') || '';
 	}
 	
 	get name() {

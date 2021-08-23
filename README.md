@@ -10,14 +10,18 @@
 | id         | 拼接本地数据存储的key值                                 | string | login-module |
 | main-style | 登录页样式，可替换背景图                           | string | ''           |
 | body-style      | form表单的样式                                     | string | ''           |
+| item-style | form表单每一项的样式 | string | '' |
 | method     | 请求类型 GET POST                                       | string | POST         |
 | url        | 是否需要组件去处理登录逻辑，<br />默认fetch下发数据请求 | string | null         |
 | user       | form表单用户的name属性                                  | string | user         |
 | password   | form表单密码的name属性                                  | string | password     |
 | captcha | 验证码能力 | string  | '' |
-| captchaurl | 验证码地址 | string \| null | null |
+| captchasrc | 验证码src地址，手动设置 | string | null |
+| captchaurl | 验证码请求地址地址 | string \| null | null |
 | captchamethod | 验证码请求类型 | string | POST |
 | publickey | 加密公钥 | string | null |
+
+
 
 ##### 事件配置 （注意webpace5摇树配置会导致导入不可用时，请直接使用import  ‘@gaopeng123/login-module’ 导入)
 
@@ -60,6 +64,11 @@ submitError 在fetch出错情况下触发
         form.addEventListener('submitError', (data)=> {
             console.log(data)
         });
+		// 点击验证码触发事件
+		form.addEventListener('captchaClick', (data) => {
+			console.log(data);
+		form.setAttribute('captchasrc', '/iconfont/test.svg')
+	});
     </script>
 ```
 

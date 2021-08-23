@@ -1,6 +1,6 @@
 {
     "name": "@gaopeng123/login-module",
-    "version": "0.1.5",
+    "version": "0.1.6",
     "description": "登录模块",
     "main": "dist/main.js",
     "typings": "dist/typing.ts",
@@ -12,6 +12,7 @@
     "scripts": {
         "start": "set NODE_ENV=development&&webpack serve",
         "build:dev": "set NODE_ENV=development&&webpack build",
+        "push": "npm publish --access public",
         "build": "set NODE_ENV=production&&webpack build",
         "watch": "webpack --watch",
         "test": "echo \"Error: no test specified\" && exit 1"
@@ -31,9 +32,11 @@
         "url-loader": "^4.1.1",
         "webpack": "^5.38.1",
         "webpack-cli": "^4.7.0",
-        "webpack-dev-server": "^3.11.2"
+        "webpack-dev-server": "^3.11.2",
+        "whatwg-fetch": "^3.6.2"
     },
     "dependencies": {
+        "@gaopeng123/fetch": "^0.1.8",
         "crypto-js": "^4.0.0"
     }
 }

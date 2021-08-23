@@ -1,8 +1,10 @@
 import './xy-ui/components/xy-input.js';
 import './xy-ui/components/xy-checkbox.js';
 import './xy-ui/components/xy-form.js';
+import { get, post } from '@gaopeng123/fetch';
 // 静态资源依赖
 import './assets/icon.svg';
+import './assets/test.svg';
 
 export default class LogInModule extends HTMLElement {
 	shadow: any = null;
@@ -46,7 +48,7 @@ export default class LogInModule extends HTMLElement {
 	
 	create = () => {
 		const config = this.getConfig();
-		const { title, url, user, password, method, publickey, captcha } = config;
+		const { title, url, user, password, method, publickey, captcha, captchasrc } = config;
 		
 		/**
 		 * 项目title赋值
@@ -95,6 +97,12 @@ export default class LogInModule extends HTMLElement {
 		captcha && this.checkChange(this.shadow.querySelector(`#captcha`).getAttribute('name'), captcha, () => {
 			this.shadow.querySelector(`#captcha`).setAttribute('name', captcha);
 		});
+		/**
+		 * 设置验证码地址
+		 */
+		captcha && captchasrc && this.checkChange(this.captchaImg.getAttribute('src'), captchasrc, () => {
+			this.captchaImg.setAttribute('src', captchasrc);
+		});
 	};
 	/**
 	 * 新老数据比对后再赋值
@@ -116,6 +124,7 @@ export default class LogInModule extends HTMLElement {
 		user: 'user',
 		password: 'password',
 		captcha: '',
+		captchasrc: null,
 		captchaurl: null,
 		captchamethod: 'POST',
 		publickey: null // 加密公钥
@@ -238,18 +247,23 @@ export default class LogInModule extends HTMLElement {
 	 * @returns {string[]}
 	 */
 	static get observedAttributes() {
-		return ['title',
+		// 参数请参考文档
+		return [
+			'title',
 			'id',
 			'body-style',
 			'main-style',
+			'item-style',
 			'url',
 			'method',
 			'user',
 			'password',
 			'captcha',
+			'captchasrc',
 			'captchaurl',
 			'captchamethod',
-			'publickey'];
+			'publickey'
+		];
 	}
 	
 	/**
@@ -257,23 +271,33 @@ export default class LogInModule extends HTMLElement {
 	 */
 	getCaptcha = async (): Promise<Blob> => {
 		const { captchaurl, captchamethod } = this.getConfig();
-		const data = await fetch(captchaurl, {
-			method: captchamethod,
-			mode: 'cors',
-			headers: {
-				'content-type': 'application/x-www-form-urlencoded;charset=utf-8'
-			}
+		const headers = {
+			'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8'
+		};
+		const data = captchamethod === 'POST' ? post(captchaurl, {
+			headers: headers,
+			responseType: 'blob'
+		}) : get(captchaurl, {
+			headers: headers,
+			responseType: 'blob'
 		});
-		return await data.blob();
+		return await data;
 	};
 	
 	/**
 	 * 设置验证码
 	 */
 	setCaptcha = async () => {
-		if (this.getConfig().captcha) {
-			const captcha = await this.getCaptcha();
-			this.captchaImg.setAttribute('src', window.URL?.createObjectURL(captcha));
+		const { captcha, captchaurl } = this.getConfig();
+		if (captcha) {
+			if (captchaurl) {
+				const captcha = await this.getCaptcha();
+				this.captchaImg.setAttribute('src', window.URL?.createObjectURL(captcha));
+			} else {
+				this.dispatchEvent(new CustomEvent('captchaClick', {
+					detail: { time: Date.now() }
+				}));
+			}
 		}
 	};
 	
@@ -293,13 +317,17 @@ export default class LogInModule extends HTMLElement {
     				background-color: #fff;
     				position: absolute;
 				}
+				xy-form > .item {
+					margin: 24px 24px;
+					display: block;
+				}
 				xy-input, xy-button{
 					width: 100%;
 				}
 				xy-input {
 					height: 38px;
 				}
-				.login-module{
+				.login-module {
 					height: 100%;
 				    width: 100%;
 				    position: absolute;
@@ -317,6 +345,7 @@ export default class LogInModule extends HTMLElement {
 					radial-gradient(rgba(255,255,255,.4), rgba(255,255,255,.1) 2px, transparent 30px);
 					
 				}
+				
 				.login-module-bg {
 					background-size: 550px 550px, 350px 350px, 250px 250px, 150px 150px;
 					background-position: 0 0, 40px 60px, 130px 270px, 70px 100px;
@@ -337,23 +366,29 @@ export default class LogInModule extends HTMLElement {
 					margin-bottom: 24px;
 					color: #666
 				}
+				
+				#captchaImg {
+					cursor: pointer;
+				}
 
 			</style>
 			<div class="login-module ${config[`main-style`] ? '' : 'login-module-bg'}" id="login" style="${config[`main-style`]}">
-				<xy-form id="login-module" action="${url}" method="${method}" style="${config['body-style']}">
-					<xy-form-item class="login-title">
+				<xy-form id="login-module" action="${url}" method="${method}"
+					style="${config['body-style']}" form-style="display:block;">
+					<xy-form-item class="login-title" style="${config['item-style']}">
 						<span id="title">${title}</span>
 					</xy-form-item>
-					<xy-form-item>
+					<xy-form-item style="${config['item-style']}" class="item">
 						<xy-input id="user" icon="user" color="#999" required name="${user}" placeholder="请输入用户名"></xy-input>
-					</xy-form-item>
-					<xy-form-item>
+					</xy-form-item style="${config['item-style']}">
+					<xy-form-item style="${config['item-style']}" class="item">
 						<xy-input id="password" icon="lock" publickey="${publickey}" name="${password}" required type="password" placeholder="请输入密码"></xy-input>
 					</xy-form-item>
 		` + (captcha ? `
-                    <xy-form-item id="captchaItem">
+                    <xy-form-item id="captchaItem" style="${config['item-style']}" class="item">
                         <xy-input style="width: 70%;" id="captcha" icon="message" name="${captcha}" required type="captcha" placeholder="请输入验证码"></xy-input>
-                        <img id="captchaImg" width="24" height="24" style="width: 80px;height: 37px;float: right;border-radius: 4px;" />
+                        <img id="captchaImg" width="24" height="24" alt="验证码"
+                        style="width: 80px;height: 37px;float: right;border-radius: 4px;" />
                     </xy-form-item>
             ` : '') + `
 		            <!--<xy-form-item >-->
@@ -362,7 +397,7 @@ export default class LogInModule extends HTMLElement {
 							<!--<a style="float: right;" href="javascript:void(0);">忘记密码</a>-->
 						<!--</div>-->
 					<!--</xy-form-item>-->
-                    <xy-form-item>
+                    <xy-form-item class="item">
                         <xy-button id="bth-login" type="primary" htmltype="submit">登录</xy-button>
                     </xy-form-item>
                 </xy-form>

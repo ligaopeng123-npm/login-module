@@ -5,39 +5,45 @@
     <title>loginModule</title>
 </head>
 <body style="margin: 0px;">
-<!--<login-module-->
-<!--url="/aidata/user/login"-->
-<!--method="POST"-->
-<!--user="userId"-->
-<!--password="password"-->
-<!--captcha="verificationCode"-->
-<!--captchamethod="GET"-->
-<!--captchaurl="/aidata/user/captcha"-->
-<!--id="form"-->
-<!--main-style="background-image: url(./assets/background.jpg)"-->
-<!--body-style="right: 200px;"-->
-<!--title="系统">-->
-<!--</login-module>-->
 <login-module
-        url="http://***"
-        method="POST"
-        user="account"
+        user="userId"
         password="password"
+        captcha="verificationCode"
+        captchamethod="GET"
+
         id="form"
-        publickey="***"
+        main-style="background-image: url(./assets/background.jpg)"
         body-style="right: 200px;"
         title="系统">
 </login-module>
+<!--<login-module-->
+<!--url="http://***"-->
+<!--method="POST"-->
+<!--user="account"-->
+<!--password="password"-->
+<!--id="form"-->
+<!--publickey="***"-->
+<!--item-style="padding:24px;"-->
+<!--body-style="right: 200px;"-->
+<!--title="系统">-->
+<!--</login-module>-->
 <script>
 	const form = document.querySelector('#form');
 	form.addEventListener('submit', (data) => {
-		// console.log(data);
+		console.log(data);
 	});
+
 	form.addEventListener('afterSubmit', (data) => {
 		// console.log(data);
 	});
+
 	form.addEventListener('submitError', (data) => {
 		console.log(data.detail.data);
+	});
+
+	form.addEventListener('captchaClick', (data) => {
+		console.log(data);
+		form.setAttribute('captchasrc', '/iconfont/test.svg')
 	});
 </script>
 </body>
