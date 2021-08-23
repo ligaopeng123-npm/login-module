@@ -1,6 +1,6 @@
 {
     "name": "@gaopeng123/login-module",
-    "version": "0.1.6",
+    "version": "0.1.7",
     "description": "登录模块",
     "main": "dist/main.js",
     "typings": "dist/typing.ts",
@@ -25,6 +25,7 @@
         "@babel/plugin-proposal-class-properties": "^7.13.0",
         "@babel/preset-env": "^7.14.4",
         "babel-loader": "^8.2.2",
+        "copy-webpack-plugin": "^9.0.1",
         "file-loader": "^6.2.0",
         "html-webpack-plugin": "^5.3.1",
         "ts-loader": "^9.2.2",

@@ -29,6 +29,7 @@
 submit事件 在点击登录时触发，传递的登录信息在，detail字段中
 afterSubmit 在登录数据下发服务端后触发 用于处理登录后的路由跳转等逻辑
 submitError 在fetch出错情况下触发
+captchaClick 在点击验证码的时候触发
 ```
 
 ```tsx
@@ -67,8 +68,8 @@ submitError 在fetch出错情况下触发
 		// 点击验证码触发事件
 		form.addEventListener('captchaClick', (data) => {
 			console.log(data);
-		form.setAttribute('captchasrc', '/iconfont/test.svg')
-	});
+			form.setAttribute('captchasrc', '/iconfont/test.svg')   
+		});
     </script>
 ```
 

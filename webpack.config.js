@@ -1,5 +1,6 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const CopyPlugin = require('copy-webpack-plugin');
 const NODE_ENV = process.env.NODE_ENV.trimEnd();
 
 module.exports = {
@@ -35,6 +36,7 @@ module.exports = {
 							}]
 						],
 						plugins: [
+							
 							// [
 							//     '@babel/plugin-proposal-decorators',
 							//     {'legacy': true}
@@ -43,7 +45,8 @@ module.exports = {
 								'@babel/plugin-proposal-class-properties',
 								{ 'loose': true } // 宽松模式
 							]
-							// '@babel/plugin-transform-runtime'
+							// '@babel/plugin-transform-runtime'，
+						
 						]
 					}
 				},
@@ -76,6 +79,11 @@ module.exports = {
 		new HtmlWebpackPlugin({
 			title: '登录',
 			template: './src/index.html'
+		}),
+		new CopyPlugin({
+			patterns: [
+				{ from: './src/typing.ts', to: './typing.ts' }
+			]
 		})
 	],
 	experiments: {

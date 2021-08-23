@@ -4,7 +4,7 @@ import './xy-ui/components/xy-form.js';
 import { get, post } from '@gaopeng123/fetch';
 // 静态资源依赖
 import './assets/icon.svg';
-import './assets/test.svg';
+// import './assets/test.svg';
 
 export default class LogInModule extends HTMLElement {
 	shadow: any = null;
