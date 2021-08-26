@@ -1,6 +1,6 @@
 {
     "name": "@gaopeng123/login-module",
-    "version": "0.1.7",
+    "version": "0.1.9",
     "description": "登录模块",
     "main": "dist/main.js",
     "typings": "dist/typing.ts",
@@ -33,11 +33,10 @@
         "url-loader": "^4.1.1",
         "webpack": "^5.38.1",
         "webpack-cli": "^4.7.0",
-        "webpack-dev-server": "^3.11.2",
-        "whatwg-fetch": "^3.6.2"
+        "webpack-dev-server": "^3.11.2"
     },
     "dependencies": {
-        "@gaopeng123/fetch": "^0.1.8",
+        "@gaopeng123/fetch": "^0.1.9",
         "crypto-js": "^4.0.0"
     }
 }
