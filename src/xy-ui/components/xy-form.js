@@ -87,7 +87,7 @@ export default class XyForm extends HTMLElement {
          * 请求返回数据
          * @type {any}
          */
-        let resData = data.clone().json();
+        let resData = await data.clone().json();
 
         this.dispatchEvent(new CustomEvent('submit', {
             detail: {

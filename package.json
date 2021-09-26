@@ -1,6 +1,6 @@
 {
     "name": "@gaopeng123/login-module",
-    "version": "0.1.10",
+    "version": "0.1.12",
     "description": "登录模块",
     "main": "dist/main.js",
     "typings": "dist/typing.ts",
@@ -12,7 +12,7 @@
     "scripts": {
         "start": "set NODE_ENV=development&&webpack serve",
         "build:dev": "set NODE_ENV=development&&webpack build",
-        "push": "npm publish --access public",
+        "push": "npm run build && npm publish --access public",
         "build": "set NODE_ENV=production&&webpack build",
         "watch": "webpack --watch",
         "test": "echo \"Error: no test specified\" && exit 1"
