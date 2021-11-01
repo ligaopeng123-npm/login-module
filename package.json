@@ -1,6 +1,6 @@
 {
     "name": "@gaopeng123/login-module",
-    "version": "0.1.13",
+    "version": "0.1.14",
     "description": "登录模块",
     "main": "dist/main.js",
     "typings": "dist/typing.ts",
@@ -37,6 +37,7 @@
     },
     "dependencies": {
         "@gaopeng123/fetch": "^0.1.15",
+        "@gaopeng123/utils": "^0.2.1",
         "crypto-js": "^4.0.0"
     }
 }

@@ -4,6 +4,7 @@ import './xy-ui/components/xy-form.js';
 import { get, post } from '@gaopeng123/fetch';
 // 静态资源依赖
 import './assets/icon.svg';
+import { isBoolean, removeUrlParams } from '@gaopeng123/utils';
 // import './assets/test.svg';
 
 export default class LogInModule extends HTMLElement {
@@ -127,7 +128,8 @@ export default class LogInModule extends HTMLElement {
 		captchasrc: null,
 		captchaurl: null,
 		captchamethod: 'POST',
-		publickey: null // 加密公钥
+		publickey: null, // 加密公钥
+		keeplogged: false // 记住密码
 	};
 	__config: any = {};
 	getConfig = (): any => {
@@ -140,8 +142,30 @@ export default class LogInModule extends HTMLElement {
 	connectedCallback() {
 		this.shadow.innerHTML = this.getTemplate();
 		this.addEvents();
-		if (this.checkbox) this.checkbox.checked = true;
 		this.setCaptcha();
+		this.setFormValue();
+	}
+	
+	/**
+	 * 设置form表单数据
+	 */
+	setFormValue() {
+		// 如果是记住密码
+		if (this.keeplogged) {
+			const storageValue = this.getLocalStorageValue();
+			const { keepLogged } = storageValue;
+			if (keepLogged) {
+				const { user, password } = this.getConfig();
+				const userValue = storageValue[user];
+				const passwordValue = storageValue[password];
+				this.shadow.querySelector('#user').value = userValue;
+				this.shadow.querySelector('#password').value = passwordValue;
+				this.shadow.querySelector('#password').keeplogged = passwordValue;
+				this.checkbox.checked = true;
+			} else {
+				this.checkbox.checked = false;
+			}
+		}
 	}
 	
 	/**
@@ -183,6 +207,39 @@ export default class LogInModule extends HTMLElement {
 		});
 	}
 	
+	href: string = null;
+	
+	/**
+	 * 获取地址
+	 */
+	getLocationHref() {
+		if (!this.href) {
+			const href = window.location.href;
+			this.href = removeUrlParams(href);
+		}
+		return this.href;
+	}
+	
+	/**
+	 * 获取LocalStorageValue的值
+	 */
+	getLocalStorageValue() {
+		const val = localStorage.getItem(this.getLocationHref());
+		return val ? JSON.parse(val) : {};
+	}
+	
+	/**
+	 * 设置缓存
+	 * @param val
+	 */
+	setLocalStorageValue(val: any) {
+		localStorage.setItem(this.getLocationHref(), JSON.stringify(val));
+	}
+	
+	clearLocalStorageValue() {
+		localStorage.clear();
+	}
+	
 	/**
 	 * 提交回调 给外部提供的接口
 	 */
@@ -191,12 +248,15 @@ export default class LogInModule extends HTMLElement {
 			/**
 			 * 如果是记住密码状态 则将密码缓存起来
 			 */
-			if (this.checkbox && this.checkbox.checked) {
+			if (this.keeplogged && this.checkbox && this.checkbox.checked) {
 				this.session = Object.assign({
 					keepLogged: this.checkbox.checked
 				}, this.form.formdata?.json);
+				this.setLocalStorageValue(this.session);
 			} else {
 				this.session = Object.assign({}, this.form.formdata?.json);
+				// 清理缓存
+				this.setLocalStorageValue({});
 			}
 			/**
 			 * 将消息发送出去
@@ -262,7 +322,8 @@ export default class LogInModule extends HTMLElement {
 			'captchasrc',
 			'captchaurl',
 			'captchamethod',
-			'publickey'
+			'publickey',
+			'keeplogged'
 		];
 	}
 	
@@ -302,11 +363,26 @@ export default class LogInModule extends HTMLElement {
 	};
 	
 	/**
+	 * 是否是true
+	 * @param val
+	 */
+	isTrue(val: any) {
+		return isBoolean(val) ? val : val === 'true';
+	}
+	
+	// 是否支持记住密码
+	keeplogged: boolean = false;
+	/**
 	 * 模板获取
 	 */
 	getTemplate = () => {
 		const config = this.getConfig();
 		const { title, url, user, password, method, publickey, captcha } = config;
+		
+		const keeplogged = this.isTrue(config.keeplogged);
+		
+		this.keeplogged = keeplogged;
+		
 		return `
 			<style>
 				xy-form {
@@ -364,45 +440,47 @@ export default class LogInModule extends HTMLElement {
 				}
 				.login-manipulate {
 					margin-bottom: 24px;
-					color: #666
+					color: #666;
+					margin-left: 24px;
 				}
-				
 				#captchaImg {
 					cursor: pointer;
 				}
 
 			</style>
 			<div class="login-module ${config[`main-style`] ? '' : 'login-module-bg'}" id="login" style="${config[`main-style`]}">
-				<xy-form id="login-module" action="${url}" method="${method}"
+				<xy-form autocomplete="on" id="login-module" action="${url}" method="${method}"
 					style="${config['body-style']}" form-style="display:block;">
 					<xy-form-item class="login-title" style="${config['item-style']}">
 						<span id="title">${title}</span>
 					</xy-form-item>
 					<xy-form-item style="${config['item-style']}" class="item">
-						<xy-input id="user" icon="user" color="#999" required name="${user}" placeholder="请输入用户名"></xy-input>
+						<xy-input errortips="请输入用户名" id="user" icon="user" color="#999" required name="${user}" placeholder="请输入用户名"></xy-input>
 					</xy-form-item style="${config['item-style']}">
 					<xy-form-item style="${config['item-style']}" class="item">
-						<xy-input id="password" icon="lock" publickey="${publickey}" name="${password}" required type="password" placeholder="请输入密码"></xy-input>
+						<xy-input autocomplete="new-password" id="password" icon="lock" publickey="${publickey}" name="${password}"
+							required type="password" errortips="请输入密码" placeholder="请输入密码">
+						</xy-input>
 					</xy-form-item>
-		` + (captcha ? `
-                    <xy-form-item id="captchaItem" style="${config['item-style']}" class="item">
-                        <xy-input style="width: 70%;" id="captcha" icon="message" name="${captcha}" required type="captcha" placeholder="请输入验证码"></xy-input>
-                        <img id="captchaImg" width="24" height="24" alt="验证码"
-                        style="width: 80px;height: 37px;float: right;border-radius: 4px;" />
-                    </xy-form-item>
-            ` : '') + `
-		            <!--<xy-form-item >-->
-						<!--<div class="login-manipulate">-->
-							<!--<xy-checkbox id="checked">记住密码</xy-checkbox>-->
-							<!--<a style="float: right;" href="javascript:void(0);">忘记密码</a>-->
-						<!--</div>-->
-					<!--</xy-form-item>-->
+					` + (captcha ? `
+	                    <xy-form-item id="captchaItem" style="${config['item-style']}" class="item">
+	                        <xy-input errortips="请输入验证码" style="width: 70%;" id="captcha" icon="message" name="${captcha}" required type="captcha" placeholder="请输入验证码"></xy-input>
+	                        <img id="captchaImg" width="24" height="24" alt="验证码"
+	                        style="width: 80px;height: 37px;float: right;border-radius: 4px;" />
+	                    </xy-form-item>
+	                ` : '')
+			+ (keeplogged
+				? `<xy-form-item >
+						<div class="login-manipulate">
+							<xy-checkbox id="checked">记住密码</xy-checkbox>
+						</div>
+					</xy-form-item>` : '') + `
                     <xy-form-item class="item">
                         <xy-button id="bth-login" type="primary" htmltype="submit">登录</xy-button>
                     </xy-form-item>
                 </xy-form>
-            </div>`
-			;
+            </div>
+			`;
 	};
 }
 

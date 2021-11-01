@@ -68,7 +68,7 @@ module.exports = {
 				loader: 'url-loader', // url-loader 依赖于  file-loader 要使用url-loader必须安装file-loader
 				options: {
 					name: '[name].[ext]', // 文件名.hash.文件扩展名 默认格式为[hash].[ext]，没有文件名
-					limit: 1024 * 8, // 将小于8KB的图片转换成base64的格式
+					limit: 1024 * 500, // 将小于8KB的图片转换成base64的格式
 					outputPath: 'iconfont/', // 为你的文件配置自定义 output 输出目录 ; 用来处理图片路径问题
 					publicPath: 'assets/' // 为你的文件配置自定义 public 发布目录 ; 用来处理图片路径问题
 				}
@@ -82,7 +82,11 @@ module.exports = {
 		}),
 		new CopyPlugin({
 			patterns: [
-				{ from: './src/typing.ts', to: './typing.ts' }
+				{ from: './src/typing.ts', to: './typing.ts' },
+				{
+					from: './src/assets/login.json',//json文件路径
+					to: './assets/login.json' //打包后文件路径
+				}
 			]
 		})
 	],

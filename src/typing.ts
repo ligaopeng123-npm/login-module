@@ -20,6 +20,7 @@ export declare interface LoginModuleProps extends React.DetailedHTMLProps<React.
 	captchasrc?: string, // 验证码能力
 	captchaurl?: string, // 验证码地址
 	captchamethod?: string, // 验证码请求类型
+	keeplogged?: boolean, // 是否支持记住密码
 }
 
 declare global {

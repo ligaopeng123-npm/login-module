@@ -235,7 +235,7 @@ export default class XyInput extends HTMLElement {
 			this.inputCon.show = 'show';
 			this.invalid = true;
 			if (this.input.validity.valueMissing) {
-				this.inputCon.tips = this.input.validationMessage;
+				this.inputCon.tips = this.errortips || this.input.validationMessage;
 			} else {
 				if (!this.customValidity.method(this)) {
 					this.inputCon.tips = this.customValidity.tips;
@@ -438,7 +438,8 @@ export default class XyInput extends HTMLElement {
 	
 	get value() {
 		if (this.type === 'password' && this.publickey && this.publickey != 'null') {
-			// UmqrSpL4uz8TAezaWfNScQ==
+			// 如果keeplogged和当前的值一样 则不再重复加密 直接返回
+			if (this.keeplogged === this.input.value) return this.input.value;
 			return encryptDES(this.input.value, this.publickey);
 		}
 		return this.input.value;
