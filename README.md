@@ -20,6 +20,7 @@
 | captchaurl | 验证码请求地址地址 | string \| null | null |
 | captchamethod | 验证码请求类型 | string | POST |
 | publickey | 加密公钥 | string | null |
+| keeplogged | 支持记住密码 | boolean | false |
 
 
 
