@@ -472,7 +472,7 @@ export default class LogInModule extends HTMLElement {
 			+ (keeplogged
 				? `<xy-form-item >
 						<div class="login-manipulate">
-							<xy-checkbox id="checked">记住密码</xy-checkbox>
+							<xy-checkbox id="checked">记住我</xy-checkbox>
 						</div>
 					</xy-form-item>` : '') + `
                     <xy-form-item class="item">
