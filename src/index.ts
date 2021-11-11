@@ -64,6 +64,10 @@ export default class LogInModule extends HTMLElement {
 		 */
 		this.checkChange(this.shadow.querySelector('#title').innerText, title, () => {
 			this.shadow.querySelector('#title').innerText = title;
+			const agreementText = this.shadow.querySelector('#agreement-proprietary-text');
+			if (agreementText) {
+				agreementText.innerText = `${title}服务协议`;
+			}
 		});
 		
 		/**
