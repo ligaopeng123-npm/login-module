@@ -21,6 +21,7 @@
 | captchamethod | 验证码请求类型 | string | POST |
 | publickey | 加密公钥 | string | null |
 | keeplogged | 支持记住密码 | boolean | false |
+| agreement-proprietary | 用户协议的主题<br />（主要体现的解释权）例如：干饭人集团<br />用户协议中，会将title和“干饭人集团”进行拼接 | string | '' |
 
 
 
