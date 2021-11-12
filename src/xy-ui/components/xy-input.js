@@ -201,7 +201,7 @@ export default class XyInput extends HTMLElement {
 				''
 			}
             ${
-			this.type === 'password' && !multi ?
+			this.type === 'password' && this.passwordText === 'plain' && !multi ?
 				'<xy-button id="btn-pass" class="btn-right" icon="eye-close" type="flat" shape="circle"></xy-button>'
 				:
 				''
@@ -487,6 +487,10 @@ export default class XyInput extends HTMLElement {
 	
 	get type() {
 		return this.getAttribute('type');
+	}
+	
+	get passwordText() {
+		return this.getAttribute('password-text');
 	}
 	
 	get publickey() {

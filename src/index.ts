@@ -136,6 +136,7 @@ export default class LogInModule extends HTMLElement {
 		url: null, // 默认不支持传参
 		user: 'user',
 		password: 'password',
+		'password-text': 'plain',
 		captcha: '',
 		captchasrc: null,
 		captchaurl: null,
@@ -524,6 +525,7 @@ export default class LogInModule extends HTMLElement {
 			'method',
 			'user',
 			'password',
+			'password-text', // 是否支持明文显示
 			'captcha',
 			'captchasrc',
 			'captchaurl',
@@ -587,6 +589,10 @@ export default class LogInModule extends HTMLElement {
 		const { title, url, user, password, method, publickey, captcha } = config;
 		
 		const keeplogged = this.isTrue(config.keeplogged);
+		/**
+		 * 明文 密文显示
+		 */
+		const passwordText = config['password-text'];
 		
 		this.keeplogged = keeplogged;
 		/**
@@ -594,6 +600,7 @@ export default class LogInModule extends HTMLElement {
 		 */
 		const agreementProprietary = config['agreement-proprietary'];
 		
+		console.log(passwordText)
 		const onchange = () => {
 			console.log(2);
 			return () => {
@@ -684,7 +691,7 @@ export default class LogInModule extends HTMLElement {
 						<xy-input errortips="请输入用户名" id="user" icon="user" color="#999" required name="${user}" placeholder="请输入用户名"></xy-input>
 					</xy-form-item style="${config['item-style']}">
 					<xy-form-item style="${config['item-style']}" class="item">
-						<xy-input autocomplete="new-password" id="password" icon="lock" publickey="${publickey}" name="${password}"
+						<xy-input autocomplete="new-password" password-text="${passwordText}" id="password" icon="lock" publickey="${publickey}" name="${password}"
 							required type="password" errortips="请输入密码" placeholder="请输入密码">
 						</xy-input>
 					</xy-form-item>

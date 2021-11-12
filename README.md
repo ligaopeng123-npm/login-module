@@ -15,6 +15,7 @@
 | url        | 是否需要组件去处理登录逻辑，<br />默认fetch下发数据请求 | string | null         |
 | user       | form表单用户的name属性                                  | string | user         |
 | password   | form表单密码的name属性                                  | string | password     |
+| password-text | 密码是否支持明文显示 <br />plain支持切换明文 cipher不支持 | string | plain |
 | captcha | 验证码能力 | string  | '' |
 | captchasrc | 验证码src地址，手动设置 | string | null |
 | captchaurl | 验证码请求地址地址 | string \| null | null |
