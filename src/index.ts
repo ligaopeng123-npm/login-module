@@ -294,7 +294,7 @@ export default class LogInModule extends HTMLElement {
 				//按确定键的操作
 			},
 			content: `
-			<div>
+			<div style="color: #000">
                 <h2>一、总则</h2>
                 <p>
                     1.1
