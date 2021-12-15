@@ -209,6 +209,53 @@ export default class LogInModule extends HTMLElement {
 		this.agreementProprietary?.addEventListener('change', this.agreementChange);
 		this.shadow.querySelector('#agreement-proprietary-text')
 			?.addEventListener('click', this.agreementClick);
+		this.addKeyWordEvents();
+	}
+	
+	onkeydown = (event: any) => {
+		// @ts-ignore
+		const activeTagName = document.activeElement.tagName;
+		if (activeTagName === 'LOGIN-MODULE') {
+			// @ts-ignore
+			const e = event || window.event || arguments.callee.caller.arguments[0];
+			
+			if (e && e.keyCode == 27) { // 按 Esc
+			
+			}
+			
+			if (e && e.keyCode == 113) { // 按 F2
+			
+			}
+			
+			if (e && e.keyCode == 13) { // enter 键
+				this.onEnter();
+			}
+		}
+	};
+	
+	/**
+	 * 点击enter键触发事件 解决react中事件拦截bug
+	 */
+	onEnter() {
+		setTimeout(() => {
+			const loginBth = this.shadow && this.shadow.querySelector
+				? this.shadow.querySelector(`#bth-login`)
+				: null;
+			if (loginBth && loginBth.getAttribute('loading') !== '') {
+				loginBth.click();
+			}
+		}, 10);
+	}
+	
+	/**
+	 * 监听键盘事件
+	 */
+	addKeyWordEvents() {
+		document.addEventListener('keydown', this.onkeydown);
+	};
+	
+	removeKeyWordEvents() {
+		document.removeEventListener('keydown', this.onkeydown);
 	}
 	
 	addCaptchaEvent() {
@@ -450,7 +497,16 @@ export default class LogInModule extends HTMLElement {
 	/**
 	 * 提交回调 给外部提供的接口
 	 */
+	currentSubmitTimmer: any = null;
 	onSubmit = () => {
+		if (this.currentSubmitTimmer) {
+			console.log(this.currentSubmitTimmer);
+			if (Date.now() - this.currentSubmitTimmer < 200) {
+				this.currentSubmitTimmer = Date.now();
+				return;
+			}
+		}
+		this.currentSubmitTimmer = Date.now();
 		if (this.form.checkValidity()) {
 			/**
 			 * 如果是记住密码状态 则将密码缓存起来
@@ -600,7 +656,7 @@ export default class LogInModule extends HTMLElement {
 		 */
 		const agreementProprietary = config['agreement-proprietary'];
 		
-		console.log(passwordText)
+		console.log(passwordText);
 		const onchange = () => {
 			console.log(2);
 			return () => {
